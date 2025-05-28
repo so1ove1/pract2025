@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ООО «Братск Профиль» - Администрирование</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="main-header">
+            <div class="logo-container">
+                <a href="index.html">
+                    <img src="https://placehold.co/200x50/2B5DA2/FFFFFF?text=Братск+Профиль" alt="Логотип Братск Профиль" class="logo">
+                </a>
+            </div>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="index.html">Главная</a></li>
+                    <li><a href="calc-cost.html">Расчет стоимости</a></li>
+                    <li><a href="calc-materials.html">Расчет материалов</a></li>
+                    <li><a href="history.html">Мои расчеты</a></li>
+                    <li><a href="admin.html" class="active">Администрирование</a></li>
+                </ul>
+            </nav>
+            <div class="user-info" id="userInfoContainer">
+                <!-- Будет заполнено из JS -->
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="page-header">
+                <h1>Панель Администрирования</h1>
+            </div>
+
+            <div class="admin-container">
+                <div class="admin-tabs">
+                    <button class="tab-btn active" data-tab="materials">Материалы</button>
+                    <button class="tab-btn" data-tab="pricelist">Прайс-лист</button>
+                    <button class="tab-btn" data-tab="users">Пользователи</button>
+                </div>
+                
+                <div class="tab-content">
+                    <!-- Вкладка "Материалы" -->
+                    <div class="tab-pane active" id="materialsTab">
+                        <div class="tab-header">
+                            <h2>Управление материалами</h2>
+                            <div class="tab-actions">
+                                <button class="btn btn-primary" id="addMaterialCategoryBtn">
+                                    <i class="fas fa-folder-plus"></i> Добавить категорию
+                                </button>
+                                <button class="btn btn-primary" id="addMaterialBtn">
+                                    <i class="fas fa-plus"></i> Добавить материал
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="materials-management">
+                            <div class="categories-sidebar">
+                                <h3>Категории</h3>
+                                <ul class="categories-list" id="categoriesList">
+                                    <!-- Список категорий будет добавлен динамически -->
+                                </ul>
+                            </div>
+                            
+                            <div class="materials-content">
+                                <div class="table-responsive">
+                                    <table class="data-table" id="materialsTable">
+                                        <thead>
+                                            <tr>
+                                                <th>Название</th>
+                                                <th>Код</th>
+                                                <th>Ед. изм.</th>
+                                                <th>Категория</th>
+                                                <th>Действия</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="materialsTableBody">
+                                            <!-- Данные будут добавлены динамически -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Вкладка "Прайс-лист" -->
+                    <div class="tab-pane" id="pricelistTab">
+                        <div class="tab-header">
+                            <h2>Управление прайс-листом</h2>
+                            <div class="tab-actions">
+                                <button class="btn btn-primary" id="addPriceItemBtn">
+                                    <i class="fas fa-plus"></i> Добавить позицию
+                                </button>
+                                <button class="btn btn-success" id="importPricelistBtn">
+                                    <i class="fas fa-file-import"></i> Импорт
+                                </button>
+                                <button class="btn btn-secondary" id="exportPricelistBtn">
+                                    <i class="fas fa-file-export"></i> Экспорт
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="pricelist-filters">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="pricelistCategory">Категория</label>
+                                    <select id="pricelistCategory">
+                                        <option value="">Все категории</option>
+                                        <!-- Будет заполнено динамически -->
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="pricelistSearch">Поиск</label>
+                                    <input type="text" id="pricelistSearch" placeholder="Название или код">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="data-table" id="pricelistTable">
+                                <thead>
+                                    <tr>
+                                        <th>Категория</th>
+                                        <th>Материал</th>
+                                        <th>Покрытие</th>
+                                        <th>Толщина, мм</th>
+                                        <th>Цена, ₽</th>
+                                        <th>Дата обновления</th>
+                                        <th>Действия</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="pricelistTableBody">
+                                    <!-- Данные будут добавлены динамически -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Вкладка "Пользователи" -->
+                    <div class="tab-pane" id="usersTab">
+                        <div class="tab-header">
+                            <h2>Управление пользователями</h2>
+                            <div class="tab-actions">
+                                <button class="btn btn-primary" id="addUserBtn">
+                                    <i class="fas fa-user-plus"></i> Добавить пользователя
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="data-table" id="usersTable">
+                                <thead>
+                                    <tr>
+                                        <th>Логин</th>
+                                        <th>ФИО</th>
+                                        <th>Роль</th>
+                                        <th>Последний вход</th>
+                                        <th>Действия</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usersTableBody">
+                                    <!-- Данные будут добавлены динамически -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="main-footer">
+            <p>&copy; 2025 ООО «Братск Профиль». Все права защищены.</p>
+        </footer>
+    </div>
+
+    <!-- Модальные окна -->
+    <div class="modal" id="materialModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="materialModalTitle">Добавление материала</h2>
+                <button class="close-btn" id="closeMaterialModalBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="materialForm">
+                    <div class="form-group">
+                        <label for="materialName">Название материала</label>
+                        <input type="text" id="materialName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="materialCode">Код</label>
+                        <input type="text" id="materialCode" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="materialUnit">Единица измерения</label>
+                        <select id="materialUnit" required>
+                            <option value="м2">м²</option>
+                            <option value="м.п.">м.п.</option>
+                            <option value="шт">шт</option>
+                            <option value="кг">кг</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="materialCategory">Категория</label>
+                        <select id="materialCategory" required>
+                            <!-- Категории будут добавлены динамически -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="materialOverallWidth">Габаритная ширина, м</label>
+                        <input type="number" id="materialOverallWidth" step="0.01" min="0.1" required>
+                        <small class="form-help">Используется для расчета стоимости</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="materialWorkingWidth">Монтажная ширина, м</label>
+                        <input type="number" id="materialWorkingWidth" step="0.01" min="0.1" required>
+                        <small class="form-help">Используется для расчета количества</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelMaterialBtn">Отмена</button>
+                <button class="btn btn-primary" id="saveMaterialBtn">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="userModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="userModalTitle">Добавление пользователя</h2>
+                <button class="close-btn" id="closeUserModalBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="userForm">
+                    <div class="form-group">
+                        <label for="userLogin">Логин</label>
+                        <input type="text" id="userLogin" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="userName">ФИО</label>
+                        <input type="text" id="userName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="userPassword">Пароль</label>
+                        <input type="password" id="userPassword" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="userRole">Роль</label>
+                        <select id="userRole" required>
+                            <option value="user">Пользователь</option>
+                            <option value="admin">Администратор</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelUserBtn">Отмена</button>
+                <button class="btn btn-primary" id="saveUserBtn">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js/main.js"></script>
+    <script type="module" src="js/admin.js"></script>
+</body>
+</html>

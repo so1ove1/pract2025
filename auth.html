@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ООО «Братск Профиль» - Авторизация</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <div class="app-container auth-page">
+        <main class="auth-container">
+            <div class="auth-logo">
+                <img src="https://placehold.co/300x75/2B5DA2/FFFFFF?text=Братск+Профиль" alt="Логотип Братск Профиль">
+            </div>
+            
+            <div class="auth-card">
+                <h1>Авторизация</h1>
+                
+                <form id="authForm" class="auth-form">
+                    <div class="form-group">
+                        <label for="userSelect">Пользователь</label>
+                        <div class="select-wrapper">
+                            <select id="userSelect" required>
+                                <option value="" disabled selected>Выберите пользователя</option>
+                                <!-- Опции будут добавлены из JavaScript -->
+                            </select>
+                            <div class="select-arrow">
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password">Пароль</label>
+                        <div class="password-input-container">
+                            <input type="password" id="password" required>
+                            <button type="button" id="togglePassword" class="toggle-password">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="authError" class="auth-error"></div>
+                    
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <i class="fas fa-sign-in-alt"></i> Войти
+                    </button>
+                </form>
+            </div>
+        </main>
+        
+        <footer class="auth-footer">
+            <p>&copy; 2025 ООО «Братск Профиль». Все права защищены.</p>
+        </footer>
+    </div>
+
+    <script type="module" src="js/auth.js"></script>
+</body>
+</html>
