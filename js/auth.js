@@ -2,8 +2,6 @@
  * auth.js - Скрипт для страницы авторизации
  */
 
-import { api } from './main.js';
-
 document.addEventListener('DOMContentLoaded', () => {
     // Инициализация формы авторизации
     initAuthForm();
@@ -30,20 +28,26 @@ async function initAuthForm() {
     
     // Загружаем список пользователей для выпадающего списка
     try {
-        const response = await fetch('/api/auth/users');
+        const response = await fetch('/api/auth/users', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
         
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         
-        const data = await response.json();
+        const users = await response.json();
         
-        if (!Array.isArray(data)) {
+        if (!Array.isArray(users)) {
             throw new Error('Invalid data format received from server');
         }
         
         // Заполняем выпадающий список
-        data.forEach(user => {
+        users.forEach(user => {
             const option = document.createElement('option');
             option.value = user.login;
             option.textContent = user.name;
@@ -72,11 +76,25 @@ async function initAuthForm() {
         authError.textContent = '';
         
         try {
-            const response = await api.auth.login({ login, password });
+            const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify({ login, password })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Ошибка авторизации');
+            }
+
+            const data = await response.json();
             
             // Сохраняем токен и данные пользователя
-            localStorage.setItem('token', response.token);
-            localStorage.setItem('currentUser', JSON.stringify(response.user));
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('currentUser', JSON.stringify(data.user));
             
             // Перенаправляем на главную страницу
             window.location.href = 'index.html';

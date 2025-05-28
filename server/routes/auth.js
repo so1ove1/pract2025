@@ -17,7 +17,7 @@ router.get('/users', async (req, res) => {
         res.json(users);
     } catch (error) {
         console.error('Error fetching users:', error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Ошибка сервера' });
     }
 });
 
@@ -26,16 +26,20 @@ router.post('/login', async (req, res) => {
     try {
         const { login, password } = req.body;
         
+        if (!login || !password) {
+            return res.status(400).json({ message: 'Необходимо указать логин и пароль' });
+        }
+        
         const user = await User.findOne({ where: { login } });
         
         if (!user) {
-            return res.status(401).json({ message: 'Invalid login or password' });
+            return res.status(401).json({ message: 'Неверный логин или пароль' });
         }
         
         const isValidPassword = await bcrypt.compare(password, user.password);
         
         if (!isValidPassword) {
-            return res.status(401).json({ message: 'Invalid login or password' });
+            return res.status(401).json({ message: 'Неверный логин или пароль' });
         }
         
         // Update last login time
@@ -46,6 +50,14 @@ router.post('/login', async (req, res) => {
             process.env.JWT_SECRET || 'your-secret-key',
             { expiresIn: '24h' }
         );
+        
+        // Set HTTP-only cookie with the token
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 24 * 60 * 60 * 1000 // 24 hours
+        });
         
         res.json({
             token,
@@ -59,7 +71,7 @@ router.post('/login', async (req, res) => {
         });
     } catch (error) {
         console.error('Authentication error:', error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Ошибка сервера' });
     }
 });
 
