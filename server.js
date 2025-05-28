@@ -41,12 +41,12 @@ app.use((err, req, res, next) => {
 });
 
 // Initialize database and start server
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 
 sequelize.authenticate()
     .then(() => {
         console.log('Database connection established');
-        app.listen(PORT, () => {
+        app.listen(PORT, '127.0.0.1', () => {
             console.log(`Server running on port ${PORT}`);
         });
     })
