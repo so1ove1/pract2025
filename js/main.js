@@ -68,7 +68,6 @@ export function formatCurrency(value) {
 
             document.getElementById('logoutBtn').addEventListener('click', async () => {
                 await supabase.auth.signOut();
-                localStorage.removeItem('currentUser');
                 window.location.href = 'auth.html';
             });
         }
@@ -85,9 +84,8 @@ export function formatCurrency(value) {
             }
         }
     } catch (error) {
-        console.error('Ошибка при получении данных пользователя:', error);
+        console.error('Error getting user data:', error);
         await supabase.auth.signOut();
-        localStorage.removeItem('currentUser');
         window.location.href = 'auth.html';
     }
 })();

@@ -38,8 +38,8 @@ async function initAuthForm() {
             userSelect.appendChild(option);
         });
     } catch (error) {
-        console.error('Ошибка при загрузке пользователей:', error);
-        authError.textContent = 'Ошибка загрузки данных. Пожалуйста, обновите страницу.';
+        console.error('Error loading users:', error);
+        authError.textContent = 'Error loading data. Please refresh the page.';
     }
     
     // Handle form submission
@@ -50,7 +50,7 @@ async function initAuthForm() {
         const password = document.getElementById('password').value;
         
         if (!login || !password) {
-            authError.textContent = 'Пожалуйста, заполните все поля';
+            authError.textContent = 'Please fill in all fields';
             return;
         }
         
@@ -73,14 +73,11 @@ async function initAuthForm() {
                 
             if (userError) throw userError;
             
-            // Store user data
-            localStorage.setItem('currentUser', JSON.stringify(userData));
-            
             // Redirect to home page
             window.location.href = 'index.html';
         } catch (error) {
-            console.error('Ошибка при авторизации:', error);
-            authError.textContent = 'Неверный логин или пароль';
+            console.error('Authentication error:', error);
+            authError.textContent = 'Invalid login or password';
         }
     });
 }
