@@ -19,8 +19,10 @@ app.use(cors({
         ? 'https://manager.bratskprofil.ru' 
         : '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
 }));
+
 app.use(express.json());
 
 // API routes
@@ -38,13 +40,13 @@ app.get('/api/health', (req, res) => {
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).json({ 
-        message: err.message || 'Internal Server Error'
+        message: err.message || 'Внутренняя ошибка сервера'
     });
 });
 
 // Initialize database and start server
 const PORT = process.env.PORT || 3000;
-const HOST = process.env.NODE_ENV === 'production' ? 'localhost' : 'localhost';
+const HOST = 'localhost';
 
 sequelize.authenticate()
     .then(() => {

@@ -1,7 +1,3 @@
-/**
- * auth.js - Скрипт для страницы авторизации
- */
-
 document.addEventListener('DOMContentLoaded', () => {
     // Инициализация формы авторизации
     initAuthForm();
@@ -28,12 +24,7 @@ async function initAuthForm() {
     
     // Загружаем список пользователей для выпадающего списка
     try {
-        const response = await fetch('/api/auth/users', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
+        const response = await fetch('/api/auth/users');
         
         if (!response.ok) {
             throw new Error('Ошибка загрузки пользователей');
@@ -75,7 +66,8 @@ async function initAuthForm() {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ login, password })
+                body: JSON.stringify({ login, password }),
+                credentials: 'include'
             });
             
             if (!response.ok) {
