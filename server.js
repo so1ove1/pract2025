@@ -15,7 +15,9 @@ const app = express();
 
 // Middleware
 app.use(cors({
-    origin: 'https://manager.bratskprofil.ru',
+    origin: process.env.NODE_ENV === 'production' 
+        ? 'https://manager.bratskprofil.ru' 
+        : '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
@@ -42,13 +44,14 @@ app.use((err, req, res, next) => {
 });
 
 // Initialize database and start server
-const PORT = 8080;
+const PORT = process.env.PORT || 8080;
+const HOST = process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost';
 
 sequelize.authenticate()
     .then(() => {
         console.log('Database connection established');
-        app.listen(PORT, () => {
-            console.log(`Server running on port ${PORT}`);
+        app.listen(PORT, HOST, () => {
+            console.log(`Server running on ${HOST}:${PORT}`);
         });
     })
     .catch(err => {
