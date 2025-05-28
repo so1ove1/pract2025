@@ -1,15 +1,15 @@
 /**
- * main.js - Общие функции для всего приложения
+ * main.js - Common functions for the application
  */
 
-// Базовый URL API
-const API_URL = window.location.origin + '/api';
+// Base API URL
+const API_URL = 'http://localhost:3001/api';
 
 /**
- * Отправка запроса к API
- * @param {string} endpoint - Конечная точка API
- * @param {Object} options - Параметры запроса
- * @returns {Promise} - Результат запроса
+ * Send request to API
+ * @param {string} endpoint - API endpoint
+ * @param {Object} options - Request options
+ * @returns {Promise} - Request result
  */
 async function fetchAPI(endpoint, options = {}) {
     const token = localStorage.getItem('token');
@@ -31,20 +31,20 @@ async function fetchAPI(endpoint, options = {}) {
             localStorage.removeItem('token');
             localStorage.removeItem('currentUser');
             window.location.href = 'auth.html';
-            throw new Error('Необходима авторизация');
+            throw new Error('Authentication required');
         }
         
         const error = await response.json();
-        throw new Error(error.message || 'Ошибка сервера');
+        throw new Error(error.message || 'Server error');
     }
 
     return response.json();
 }
 
 /**
- * Форматирование даты
- * @param {string} dateString - Дата в формате строки
- * @returns {string} - Отформатированная дата
+ * Format date
+ * @param {string} dateString - Date string
+ * @returns {string} - Formatted date
  */
 export function formatDate(dateString) {
     const date = new Date(dateString);
@@ -68,30 +68,22 @@ export function formatCurrency(value) {
     }).format(value);
 }
 
-// Проверка авторизации
+// Check authentication
 (function checkAuth() {
-    // Если мы находимся на странице auth.html, не перенаправляем
     if (window.location.pathname.includes('auth.html')) {
         return;
     }
 
-    const { data: { session }, error } = await supabase.auth.getSession();
-    
-    // Если пользователь не авторизован, перенаправляем на страницу авторизации
+    const token = localStorage.getItem('token');
+    const currentUser = localStorage.getItem('currentUser');
+
     if (!token || !currentUser) {
         window.location.href = 'auth.html';
         return;
     }
-    
+
     try {
-        const { data: user, error: userError } = await supabase
-            .from('users')
-            .select('*')
-            .eq('login', session.user.email.split('@')[0])
-            .single();
-            
-        if (userError) throw userError;
-        
+        const user = JSON.parse(currentUser);
         const userInfoContainer = document.getElementById('userInfoContainer');
         
         if (userInfoContainer) {
@@ -109,14 +101,13 @@ export function formatCurrency(value) {
                 </button>
             `;
 
-            // Добавляем обработчик клика для кнопки выхода
             document.getElementById('logoutBtn').addEventListener('click', () => {
                 localStorage.removeItem('token');
                 localStorage.removeItem('currentUser');
                 window.location.href = 'auth.html';
             });
         }
-        
+
         if (user.role !== 'admin') {
             const adminNavLink = document.getElementById('adminNavLink');
             if (adminNavLink) {
@@ -129,15 +120,15 @@ export function formatCurrency(value) {
             }
         }
     } catch (error) {
-        console.error('Error getting user data:', error);
-        await supabase.auth.signOut();
+        console.error('Error processing user data:', error);
+        localStorage.removeItem('token');
+        localStorage.removeItem('currentUser');
         window.location.href = 'auth.html';
     }
 })();
 
-// Экспортируем функцию для использования в других модулях
+// Export API functions
 export const api = {
-    // Аутентификация
     auth: {
         getUsers: () => fetchAPI('/auth/users'),
         login: (credentials) => fetchAPI('/auth/login', {
@@ -146,12 +137,10 @@ export const api = {
         })
     },
 
-    // Категории
     categories: {
         getAll: () => fetchAPI('/materials/categories')
     },
 
-    // Материалы
     materials: {
         getAll: (params = {}) => {
             const queryString = new URLSearchParams(params).toString();
@@ -170,7 +159,6 @@ export const api = {
         })
     },
 
-    // Цены
     prices: {
         getAll: (params = {}) => {
             const queryString = new URLSearchParams(params).toString();
@@ -189,7 +177,6 @@ export const api = {
         })
     },
 
-    // Расчеты
     calculations: {
         getAll: (params = {}) => {
             const queryString = new URLSearchParams(params).toString();
