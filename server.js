@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import jwt from 'jsonwebtoken';
 import sequelize from './server/config/database.js';
 
 // Import routes
@@ -25,6 +26,38 @@ app.use(cors({
 
 app.use(express.json());
 
+// JWT Routes
+app.post('/user/generateToken', (req, res) => {
+    try {
+        const token = jwt.sign(
+            { time: Date(), userId: 12 },
+            process.env.JWT_SECRET_KEY
+        );
+        res.json({ token });
+    } catch (error) {
+        res.status(500).json({ message: 'Error generating token' });
+    }
+});
+
+app.get('/user/validateToken', (req, res) => {
+    try {
+        const token = req.header(process.env.TOKEN_HEADER_KEY);
+        
+        if (!token) {
+            return res.status(401).json({ message: 'No token provided' });
+        }
+        
+        const verified = jwt.verify(token, process.env.JWT_SECRET_KEY);
+        if (verified) {
+            return res.json({ message: 'Successfully Verified' });
+        }
+        
+        res.status(401).json({ message: 'Invalid token' });
+    } catch (error) {
+        res.status(401).json({ message: 'Error validating token' });
+    }
+});
+
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/materials', materialsRoutes);
@@ -40,7 +73,7 @@ app.get('/api/health', (req, res) => {
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).json({ 
-        message: err.message || 'Внутренняя ошибка сервера'
+        message: err.message || 'Internal server error'
     });
 });
 
