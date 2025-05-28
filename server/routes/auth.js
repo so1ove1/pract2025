@@ -16,7 +16,7 @@ router.get('/users', async (req, res) => {
         
         res.json(users);
     } catch (error) {
-        console.error('Error fetching users:', error);
+        console.error('Ошибка при получении пользователей:', error);
         res.status(500).json({ message: 'Ошибка сервера' });
     }
 });
@@ -51,14 +51,6 @@ router.post('/login', async (req, res) => {
             { expiresIn: '24h' }
         );
         
-        // Set HTTP-only cookie with the token
-        res.cookie('token', token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
-            maxAge: 24 * 60 * 60 * 1000 // 24 hours
-        });
-        
         res.json({
             token,
             user: {
@@ -70,7 +62,7 @@ router.post('/login', async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('Authentication error:', error);
+        console.error('Ошибка при авторизации:', error);
         res.status(500).json({ message: 'Ошибка сервера' });
     }
 });

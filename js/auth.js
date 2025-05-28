@@ -32,19 +32,14 @@ async function initAuthForm() {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
-            },
-            credentials: 'include'
+            }
         });
         
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error('Ошибка загрузки пользователей');
         }
         
         const users = await response.json();
-        
-        if (!Array.isArray(users)) {
-            throw new Error('Invalid data format received from server');
-        }
         
         // Заполняем выпадающий список
         users.forEach(user => {
@@ -56,8 +51,7 @@ async function initAuthForm() {
         
     } catch (error) {
         console.error('Ошибка при загрузке пользователей:', error);
-        authError.textContent = 'Сервер временно недоступен. Пожалуйста, попробуйте позже.';
-        userSelect.disabled = true;
+        authError.textContent = 'Ошибка загрузки данных. Пожалуйста, обновите страницу.';
     }
     
     // Обработчик отправки формы
@@ -81,15 +75,14 @@ async function initAuthForm() {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                credentials: 'include',
                 body: JSON.stringify({ login, password })
             });
-
+            
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Ошибка авторизации');
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Ошибка авторизации');
             }
-
+            
             const data = await response.json();
             
             // Сохраняем токен и данные пользователя

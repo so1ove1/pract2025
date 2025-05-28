@@ -1,7 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import cookieParser from 'cookie-parser';
 import sequelize from './server/config/database.js';
 
 // Import routes
@@ -20,11 +19,9 @@ app.use(cors({
         ? 'https://manager.bratskprofil.ru' 
         : '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
-app.use(cookieParser());
 
 // API routes
 app.use('/api/auth', authRoutes);
@@ -47,7 +44,7 @@ app.use((err, req, res, next) => {
 
 // Initialize database and start server
 const PORT = process.env.PORT || 3000;
-const HOST = process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost';
+const HOST = process.env.NODE_ENV === 'production' ? 'localhost' : 'localhost';
 
 sequelize.authenticate()
     .then(() => {
