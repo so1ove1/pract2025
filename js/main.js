@@ -2,150 +2,43 @@
  * main.js - Общие функции для всего приложения
  */
 
-// Export functions that are used in other modules
-export function fetchData(endpoint, params = {}) {
-    // Имитация задержки запроса
-    return new Promise(async (resolve) => {
-        await new Promise(r => setTimeout(r, 300));
-        
-        // Базовые данные для имитации API
-        const mockData = {
-            // Пользователи
-            'users': [
-                { id: 1, login: 'admin', name: 'Администратор', password: 'admin', role: 'admin', lastLogin: '2025-06-10 09:15:22' },
-                { id: 2, login: 'manager', name: 'Иванов Иван', password: '12345', role: 'user', lastLogin: '2025-06-09 14:30:45' },
-                { id: 3, login: 'user', name: 'Петров Петр', password: 'user', role: 'user', lastLogin: '2025-06-08 16:40:12' }
-            ],
-            
-            // Категории материалов
-            'categories': [
-                { id: 1, name: 'Профлист' },
-                { id: 2, name: 'Металлочерепица' },
-                { id: 3, name: 'Штакетник' },
-                { id: 4, name: 'Сайдинг' },
-                { id: 5, name: 'Доборные элементы' }
-            ],
-            
-            // Материалы с добавленными полями ширины
-            'materials': [
-                { 
-                    id: 1, 
-                    name: 'Профлист C8', 
-                    code: 'C8', 
-                    unit: 'м²', 
-                    categoryId: 1,
-                    overallWidth: 1.2,
-                    workingWidth: 1.15
-                },
-                { 
-                    id: 2, 
-                    name: 'Профлист C10', 
-                    code: 'C10', 
-                    unit: 'м²', 
-                    categoryId: 1,
-                    overallWidth: 1.15,
-                    workingWidth: 1.10
-                },
-                { 
-                    id: 3, 
-                    name: 'Профлист C21', 
-                    code: 'C21', 
-                    unit: 'м²', 
-                    categoryId: 1,
-                    overallWidth: 1.05,
-                    workingWidth: 1.00
-                },
-                { id: 4, name: 'Металлочерепица Монтеррей', code: 'MCH-M', unit: 'м²', categoryId: 2 },
-                { id: 5, name: 'Металлочерепица Супермонтеррей', code: 'MCH-SM', unit: 'м²', categoryId: 2 },
-                { id: 6, name: 'Штакетник прямоугольный', code: 'SHTP', unit: 'шт', categoryId: 3 },
-                { id: 7, name: 'Штакетник закругленный', code: 'SHTZ', unit: 'шт', categoryId: 3 },
-                { id: 8, name: 'Сайдинг металлический', code: 'SM', unit: 'м²', categoryId: 4 },
-                { id: 9, name: 'Сайдинг виниловый', code: 'SV', unit: 'м²', categoryId: 4 },
-                { id: 10, name: 'Планка конька', code: 'PK', unit: 'м.п.', categoryId: 5 },
-                { id: 11, name: 'Планка торцевая', code: 'PT', unit: 'м.п.', categoryId: 5 }
-            ],
-            
-            // Прайс-лист
-            'pricelist': [
-                { id: 1, materialId: 1, coating: 'Полиэстер', thickness: 0.45, price: 650, date: '2025-05-15' },
-                { id: 2, materialId: 1, coating: 'Полиэстер', thickness: 0.5, price: 720, date: '2025-05-15' },
-                { id: 3, materialId: 2, coating: 'Полиэстер', thickness: 0.45, price: 670, date: '2025-05-15' },
-                { id: 4, materialId: 2, coating: 'Полиэстер', thickness: 0.5, price: 740, date: '2025-05-15' },
-                { id: 5, materialId: 3, coating: 'Полиэстер', thickness: 0.5, price: 750, date: '2025-05-15' },
-                { id: 6, materialId: 3, coating: 'Полиэстер', thickness: 0.7, price: 920, date: '2025-05-15' },
-                { id: 7, materialId: 4, coating: 'Полиэстер', thickness: 0.5, price: 780, date: '2025-05-15' },
-                { id: 8, materialId: 5, coating: 'Полиэстер', thickness: 0.5, price: 820, date: '2025-05-15' },
-                { id: 9, materialId: 6, coating: 'Полиэстер', thickness: 0.45, price: 95, date: '2025-05-15' },
-                { id: 10, materialId: 7, coating: 'Полиэстер', thickness: 0.45, price: 105, date: '2025-05-15' },
-                { id: 11, materialId: 8, coating: 'Полиэстер', thickness: 0.45, price: 580, date: '2025-05-15' },
-                { id: 12, materialId: 9, coating: 'ПВХ', thickness: 1.0, price: 450, date: '2025-05-15' },
-                { id: 13, materialId: 10, coating: 'Полиэстер', thickness: 0.45, price: 340, date: '2025-05-15' },
-                { id: 14, materialId: 11, coating: 'Полиэстер', thickness: 0.45, price: 280, date: '2025-05-15' }
-            ]
-        };
-        
-        let result = null;
+// Базовый URL API
+const API_URL = 'http://localhost:3000/api';
 
-        // Обработка запроса в зависимости от эндпоинта
-        switch (endpoint) {
-            case 'users':
-                result = mockData.users.map(user => {
-                    const { password, ...rest } = user;
-                    return rest;
-                });
-                break;
-                
-            case 'users/authenticate':
-                const user = mockData.users.find(u => 
-                    u.login === params.login && u.password === params.password
-                );
-                
-                if (user) {
-                    const { password, ...userInfo } = user;
-                    result = userInfo;
-                }
-                break;
-                
-            case 'categories':
-                result = mockData.categories;
-                break;
-                
-            case 'materials':
-                result = [...mockData.materials];
-                
-                if (params.categoryId) {
-                    result = result.filter(m => m.categoryId === params.categoryId);
-                }
-                break;
-                
-            case 'pricelist':
-                result = mockData.pricelist.map(item => {
-                    const material = mockData.materials.find(m => m.id === item.materialId);
-                    const category = mockData.categories.find(c => c.id === material.categoryId);
-                    return {
-                        ...item,
-                        materialName: material.name,
-                        categoryName: category.name
-                    };
-                });
-                
-                if (params.categoryId) {
-                    const filteredMaterialIds = mockData.materials
-                        .filter(m => m.categoryId === params.categoryId)
-                        .map(m => m.id);
-                        
-                    result = result.filter(item => 
-                        filteredMaterialIds.includes(item.materialId)
-                    );
-                }
-                break;
-                
-            default:
-                console.error('Неизвестный endpoint:', endpoint);
+/**
+ * Отправка запроса к API
+ * @param {string} endpoint - Конечная точка API
+ * @param {Object} options - Параметры запроса
+ * @returns {Promise} - Результат запроса
+ */
+async function fetchAPI(endpoint, options = {}) {
+    const token = localStorage.getItem('token');
+    
+    const defaultOptions = {
+        headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         }
+    };
 
-        resolve(result);
+    const response = await fetch(`${API_URL}${endpoint}`, {
+        ...defaultOptions,
+        ...options
     });
+
+    if (!response.ok) {
+        if (response.status === 401) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('currentUser');
+            window.location.href = 'auth.html';
+            throw new Error('Необходима авторизация');
+        }
+        
+        const error = await response.json();
+        throw new Error(error.message || 'Ошибка сервера');
+    }
+
+    return response.json();
 }
 
 /**
@@ -188,10 +81,11 @@ export function formatCurrency(value) {
         return;
     }
 
+    const token = localStorage.getItem('token');
     const currentUser = localStorage.getItem('currentUser');
     
     // Если пользователь не авторизован, перенаправляем на страницу авторизации
-    if (!currentUser) {
+    if (!token || !currentUser) {
         window.location.href = 'auth.html';
         return;
     }
@@ -218,6 +112,7 @@ export function formatCurrency(value) {
 
             // Добавляем обработчик клика для кнопки выхода
             document.getElementById('logoutBtn').addEventListener('click', () => {
+                localStorage.removeItem('token');
                 localStorage.removeItem('currentUser');
                 window.location.href = 'auth.html';
             });
@@ -237,7 +132,77 @@ export function formatCurrency(value) {
         }
     } catch (error) {
         console.error('Ошибка при обработке данных пользователя:', error);
+        localStorage.removeItem('token');
         localStorage.removeItem('currentUser');
         window.location.href = 'auth.html';
     }
 })();
+
+// Экспортируем функцию для использования в других модулях
+export const api = {
+    // Аутентификация
+    auth: {
+        login: (credentials) => fetchAPI('/auth/login', {
+            method: 'POST',
+            body: JSON.stringify(credentials)
+        })
+    },
+
+    // Категории
+    categories: {
+        getAll: () => fetchAPI('/materials/categories')
+    },
+
+    // Материалы
+    materials: {
+        getAll: (params = {}) => {
+            const queryString = new URLSearchParams(params).toString();
+            return fetchAPI(`/materials${queryString ? '?' + queryString : ''}`);
+        },
+        create: (data) => fetchAPI('/materials', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        }),
+        update: (id, data) => fetchAPI(`/materials/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(data)
+        }),
+        delete: (id) => fetchAPI(`/materials/${id}`, {
+            method: 'DELETE'
+        })
+    },
+
+    // Цены
+    prices: {
+        getAll: (params = {}) => {
+            const queryString = new URLSearchParams(params).toString();
+            return fetchAPI(`/prices${queryString ? '?' + queryString : ''}`);
+        },
+        create: (data) => fetchAPI('/prices', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        }),
+        update: (id, data) => fetchAPI(`/prices/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(data)
+        }),
+        delete: (id) => fetchAPI(`/prices/${id}`, {
+            method: 'DELETE'
+        })
+    },
+
+    // Расчеты
+    calculations: {
+        getAll: (params = {}) => {
+            const queryString = new URLSearchParams(params).toString();
+            return fetchAPI(`/calculations${queryString ? '?' + queryString : ''}`);
+        },
+        create: (data) => fetchAPI('/calculations', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        }),
+        delete: (id) => fetchAPI(`/calculations/${id}`, {
+            method: 'DELETE'
+        })
+    }
+};

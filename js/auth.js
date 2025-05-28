@@ -2,7 +2,7 @@
  * auth.js - Скрипт для страницы авторизации
  */
 
-import { fetchData } from './main.js';
+import { api } from './main.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     // Инициализация формы авторизации
@@ -21,8 +21,8 @@ async function initAuthForm() {
     const authError = document.getElementById('authError');
     
     // Проверяем, есть ли текущий пользователь
-    const currentUser = localStorage.getItem('currentUser');
-    if (currentUser) {
+    const token = localStorage.getItem('token');
+    if (token) {
         // Если пользователь авторизован, перенаправляем на главную
         window.location.href = 'index.html';
         return;
@@ -30,7 +30,7 @@ async function initAuthForm() {
     
     // Загружаем список пользователей для выпадающего списка
     try {
-        const users = await fetchData('users');
+        const users = await api.auth.getUsers();
         
         // Заполняем выпадающий список
         users.forEach(user => {
@@ -61,21 +61,17 @@ async function initAuthForm() {
         authError.textContent = '';
         
         try {
-            // Имитация запроса на авторизацию
-            const user = await fetchData('users/authenticate', { login, password });
+            const response = await api.auth.login({ login, password });
             
-            if (user) {
-                // Сохраняем пользователя в localStorage
-                localStorage.setItem('currentUser', JSON.stringify(user));
-                
-                // Перенаправляем на главную страницу
-                window.location.href = 'index.html';
-            } else {
-                authError.textContent = 'Неверный логин или пароль';
-            }
+            // Сохраняем токен и данные пользователя
+            localStorage.setItem('token', response.token);
+            localStorage.setItem('currentUser', JSON.stringify(response.user));
+            
+            // Перенаправляем на главную страницу
+            window.location.href = 'index.html';
         } catch (error) {
             console.error('Ошибка при авторизации:', error);
-            authError.textContent = 'Ошибка авторизации. Пожалуйста, попробуйте позже.';
+            authError.textContent = error.message || 'Ошибка авторизации. Пожалуйста, попробуйте позже.';
         }
     });
 }
