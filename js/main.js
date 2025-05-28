@@ -1,9 +1,42 @@
-import { createClient } from '@supabase/supabase-js';
+/**
+ * main.js - Общие функции для всего приложения
+ */
 
-const supabase = createClient(
-    import.meta.env.VITE_SUPABASE_URL,
-    import.meta.env.VITE_SUPABASE_ANON_KEY
-);
+// Базовый URL API
+const API_URL = '/api';
+
+/**
+ * Отправка запроса к API
+ */
+async function fetchAPI(endpoint, options = {}) {
+    const token = localStorage.getItem('token');
+    
+    const defaultOptions = {
+        headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        }
+    };
+
+    const response = await fetch(`${API_URL}${endpoint}`, {
+        ...defaultOptions,
+        ...options
+    });
+
+    if (!response.ok) {
+        if (response.status === 401) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('currentUser');
+            window.location.href = 'auth.html';
+            throw new Error('Необходима авторизация');
+        }
+        
+        const error = await response.json();
+        throw new Error(error.message || 'Ошибка сервера');
+    }
+
+    return response.json();
+}
 
 export function formatDate(dateString) {
     const date = new Date(dateString);
@@ -27,28 +60,22 @@ export function formatCurrency(value) {
     }).format(value);
 }
 
-// Check authentication
-(async function checkAuth() {
+// Проверка авторизации
+(function checkAuth() {
     if (window.location.pathname.includes('auth.html')) {
         return;
     }
 
-    const { data: { session }, error } = await supabase.auth.getSession();
+    const token = localStorage.getItem('token');
+    const currentUser = localStorage.getItem('currentUser');
     
-    if (error || !session) {
+    if (!token || !currentUser) {
         window.location.href = 'auth.html';
         return;
     }
     
     try {
-        const { data: user, error: userError } = await supabase
-            .from('users')
-            .select('*')
-            .eq('login', session.user.email.split('@')[0])
-            .single();
-            
-        if (userError) throw userError;
-        
+        const user = JSON.parse(currentUser);
         const userInfoContainer = document.getElementById('userInfoContainer');
         
         if (userInfoContainer) {
@@ -66,8 +93,9 @@ export function formatCurrency(value) {
                 </button>
             `;
 
-            document.getElementById('logoutBtn').addEventListener('click', async () => {
-                await supabase.auth.signOut();
+            document.getElementById('logoutBtn').addEventListener('click', () => {
+                localStorage.removeItem('token');
+                localStorage.removeItem('currentUser');
                 window.location.href = 'auth.html';
             });
         }
@@ -84,10 +112,74 @@ export function formatCurrency(value) {
             }
         }
     } catch (error) {
-        console.error('Error getting user data:', error);
-        await supabase.auth.signOut();
+        console.error('Ошибка при обработке данных пользователя:', error);
+        localStorage.removeItem('token');
+        localStorage.removeItem('currentUser');
         window.location.href = 'auth.html';
     }
 })();
 
-export { supabase };
+// API endpoints
+export const api = {
+    auth: {
+        getUsers: () => fetchAPI('/auth/users'),
+        login: (credentials) => fetchAPI('/auth/login', {
+            method: 'POST',
+            body: JSON.stringify(credentials)
+        })
+    },
+    
+    categories: {
+        getAll: () => fetchAPI('/materials/categories')
+    },
+    
+    materials: {
+        getAll: (params = {}) => {
+            const queryString = new URLSearchParams(params).toString();
+            return fetchAPI(`/materials${queryString ? '?' + queryString : ''}`);
+        },
+        create: (data) => fetchAPI('/materials', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        }),
+        update: (id, data) => fetchAPI(`/materials/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(data)
+        }),
+        delete: (id) => fetchAPI(`/materials/${id}`, {
+            method: 'DELETE'
+        })
+    },
+    
+    prices: {
+        getAll: (params = {}) => {
+            const queryString = new URLSearchParams(params).toString();
+            return fetchAPI(`/prices${queryString ? '?' + queryString : ''}`);
+        },
+        create: (data) => fetchAPI('/prices', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        }),
+        update: (id, data) => fetchAPI(`/prices/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(data)
+        }),
+        delete: (id) => fetchAPI(`/prices/${id}`, {
+            method: 'DELETE'
+        })
+    },
+    
+    calculations: {
+        getAll: (params = {}) => {
+            const queryString = new URLSearchParams(params).toString();
+            return fetchAPI(`/calculations${queryString ? '?' + queryString : ''}`);
+        },
+        create: (data) => fetchAPI('/calculations', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        }),
+        delete: (id) => fetchAPI(`/calculations/${id}`, {
+            method: 'DELETE'
+        })
+    }
+};
