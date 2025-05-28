@@ -1,51 +1,48 @@
-/**
- * auth.js - Скрипт для страницы авторизации
- */
+import { createClient } from '@supabase/supabase-js';
 
-import { api } from './main.js';
+const supabase = createClient(
+    import.meta.env.VITE_SUPABASE_URL,
+    import.meta.env.VITE_SUPABASE_ANON_KEY
+);
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Инициализация формы авторизации
     initAuthForm();
-    
-    // Настройка переключателя видимости пароля
     setupPasswordToggle();
 });
 
-/**
- * Инициализация формы авторизации
- */
 async function initAuthForm() {
     const userSelect = document.getElementById('userSelect');
     const authForm = document.getElementById('authForm');
     const authError = document.getElementById('authError');
     
-    // Проверяем, есть ли текущий пользователь
-    const token = localStorage.getItem('token');
-    if (token) {
-        // Если пользователь авторизован, перенаправляем на главную
+    // Check if user is already authenticated
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
         window.location.href = 'index.html';
         return;
     }
     
-    // Загружаем список пользователей для выпадающего списка
+    // Load users for dropdown
     try {
-        const users = await api.auth.getUsers();
+        const { data: users, error } = await supabase
+            .from('users')
+            .select('login, name')
+            .order('name');
+            
+        if (error) throw error;
         
-        // Заполняем выпадающий список
         users.forEach(user => {
             const option = document.createElement('option');
             option.value = user.login;
             option.textContent = user.name;
             userSelect.appendChild(option);
         });
-        
     } catch (error) {
-        console.error('Ошибка при загрузке пользователей:', error);
-        authError.textContent = 'Ошибка загрузки данных. Пожалуйста, обновите страницу.';
+        console.error('Error loading users:', error);
+        authError.textContent = 'Error loading data. Please refresh the page.';
     }
     
-    // Обработчик отправки формы
+    // Handle form submission
     authForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         
@@ -53,42 +50,46 @@ async function initAuthForm() {
         const password = document.getElementById('password').value;
         
         if (!login || !password) {
-            authError.textContent = 'Пожалуйста, заполните все поля';
+            authError.textContent = 'Please fill in all fields';
             return;
         }
         
-        // Очищаем сообщение об ошибке
         authError.textContent = '';
         
         try {
-            const response = await api.auth.login({ login, password });
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email: `${login}@bratskprofil.ru`,
+                password: password
+            });
             
-            // Сохраняем токен и данные пользователя
-            localStorage.setItem('token', response.token);
-            localStorage.setItem('currentUser', JSON.stringify(response.user));
+            if (error) throw error;
             
-            // Перенаправляем на главную страницу
+            // Get user details
+            const { data: userData, error: userError } = await supabase
+                .from('users')
+                .select('*')
+                .eq('login', login)
+                .single();
+                
+            if (userError) throw userError;
+            
+            // Redirect to home page
             window.location.href = 'index.html';
         } catch (error) {
-            console.error('Ошибка при авторизации:', error);
-            authError.textContent = error.message || 'Ошибка авторизации. Пожалуйста, попробуйте позже.';
+            console.error('Authentication error:', error);
+            authError.textContent = 'Invalid login or password';
         }
     });
 }
 
-/**
- * Настройка переключателя видимости пароля
- */
 function setupPasswordToggle() {
     const passwordInput = document.getElementById('password');
     const toggleButton = document.getElementById('togglePassword');
     
     toggleButton.addEventListener('click', () => {
-        // Изменяем тип поля ввода
         const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
         passwordInput.setAttribute('type', type);
         
-        // Изменяем иконку
         const iconClass = type === 'password' ? 'fa-eye' : 'fa-eye-slash';
         toggleButton.querySelector('i').className = `fas ${iconClass}`;
     });

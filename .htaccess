@@ -9,7 +9,7 @@ AddType application/json .json
 AddType text/css .css
 
 # Enable CORS
-Header set Access-Control-Allow-Origin "*"
+Header set Access-Control-Allow-Origin "https://manager.bratskprofil.ru"
 Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
 Header set Access-Control-Allow-Headers "Content-Type, Authorization"
 
@@ -23,7 +23,7 @@ Header set Access-Control-Allow-Headers "Content-Type, Authorization"
     
     # Handle API requests
     RewriteCond %{REQUEST_URI} ^/api/
-    RewriteRule ^(.*)$ http://127.0.0.1:3000/$1 [P,L]
+    RewriteRule ^(.*)$ http://localhost:3000/$1 [P,L]
     
     # For all other requests, serve index.html
     RewriteRule ^ index.html [L]
