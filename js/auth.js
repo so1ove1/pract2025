@@ -16,8 +16,8 @@ async function initAuthForm() {
     const authError = document.getElementById('authError');
     
     // Check if user is already authenticated
-    const session = await supabase.auth.getSession();
-    if (session?.data?.session) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
         window.location.href = 'index.html';
         return;
     }
