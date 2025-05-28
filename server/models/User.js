@@ -1,6 +1,6 @@
 import { DataTypes } from 'sequelize';
 import sequelize from '../config/database.js';
-import argon2 from 'argon2';
+import bcrypt from 'bcryptjs';
 
 const User = sequelize.define('User', {
     id: {
@@ -31,7 +31,8 @@ const User = sequelize.define('User', {
 }, {
     hooks: {
         beforeCreate: async (user) => {
-            user.password = await argon2.hash(user.password);
+            const salt = await bcrypt.genSalt(10);
+            user.password = await bcrypt.hash(user.password, salt);
         }
     }
 });
