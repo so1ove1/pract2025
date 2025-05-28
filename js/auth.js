@@ -1,9 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-    import.meta.env.VITE_SUPABASE_URL,
-    import.meta.env.VITE_SUPABASE_ANON_KEY
-);
+import { api } from './main.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     initAuthForm();
@@ -15,22 +12,19 @@ async function initAuthForm() {
     const authForm = document.getElementById('authForm');
     const authError = document.getElementById('authError');
     
-    // Check if user is already authenticated
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session) {
+    // Проверяем, есть ли текущий пользователь
+    const token = localStorage.getItem('token');
+    if (token) {
+        // Если пользователь авторизован, перенаправляем на главную
         window.location.href = 'index.html';
         return;
     }
     
-    // Load users for dropdown
+    // Загружаем список пользователей для выпадающего списка
     try {
-        const { data: users, error } = await supabase
-            .from('users')
-            .select('login, name')
-            .order('name');
-            
-        if (error) throw error;
+        const users = await api.auth.getUsers();
         
+        // Заполняем выпадающий список
         users.forEach(user => {
             const option = document.createElement('option');
             option.value = user.login;
@@ -42,7 +36,7 @@ async function initAuthForm() {
         authError.textContent = 'Error loading data. Please refresh the page.';
     }
     
-    // Handle form submission
+    // Обработчик отправки формы
     authForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         
@@ -57,27 +51,17 @@ async function initAuthForm() {
         authError.textContent = '';
         
         try {
-            const { data, error } = await supabase.auth.signInWithPassword({
-                email: `${login}@bratskprofil.ru`,
-                password: password
-            });
+            const response = await api.auth.login({ login, password });
             
-            if (error) throw error;
+            // Сохраняем токен и данные пользователя
+            localStorage.setItem('token', response.token);
+            localStorage.setItem('currentUser', JSON.stringify(response.user));
             
-            // Get user details
-            const { data: userData, error: userError } = await supabase
-                .from('users')
-                .select('*')
-                .eq('login', login)
-                .single();
-                
-            if (userError) throw userError;
-            
-            // Redirect to home page
+            // Перенаправляем на главную страницу
             window.location.href = 'index.html';
         } catch (error) {
-            console.error('Authentication error:', error);
-            authError.textContent = 'Invalid login or password';
+            console.error('Ошибка при авторизации:', error);
+            authError.textContent = error.message || 'Ошибка авторизации. Пожалуйста, попробуйте позже.';
         }
     });
 }
