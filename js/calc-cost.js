@@ -2,7 +2,7 @@
  * calc-cost.js - Скрипт для страницы расчета стоимости
  */
 
-import { fetchData, formatCurrency } from './main.js';
+import { api, formatCurrency } from './main.js';
 
 // Глобальные переменные
 let itemsData = []; // Массив для хранения добавленных товаров
@@ -33,13 +33,13 @@ document.addEventListener('DOMContentLoaded', async () => {
  * Инициализация модального окна выбора материала
  */
 async function initMaterialModal() {
-    const materialCategory =document.getElementById('materialCategory');
+    const materialCategory = document.getElementById('materialCategory');
     const materialSearch = document.getElementById('materialSearch');
     const materialsList = document.getElementById('materialsList');
     
     try {
         // Загружаем категории материалов
-        const categories = await fetchData('categories');
+        const categories = await api.categories.getAll();
         
         if (materialCategory) {
             // Заполняем выпадающий список
@@ -81,12 +81,12 @@ async function loadMaterialsList() {
         const params = {};
         
         if (materialCategory && materialCategory.value) {
-            params.categoryId = parseInt(materialCategory.value);
+            params.categoryId = materialCategory.value;
         }
         
         // Загружаем материалы и прайс-лист
-        const materials = await fetchData('materials', params);
-        const priceList = await fetchData('pricelist', params);
+        const materials = await api.materials.getAll(params);
+        const priceList = await api.prices.getAll(params);
         
         // Очищаем список
         materialsList.innerHTML = '';
@@ -145,8 +145,8 @@ async function loadMaterialsList() {
                     const option = select.options[select.selectedIndex];
                     
                     addMaterialToCalculation({
-                        materialId: parseInt(option.getAttribute('data-material-id')),
-                        priceId: parseInt(select.value),
+                        materialId: option.getAttribute('data-material-id'),
+                        priceId: select.value,
                         name: option.getAttribute('data-material-name'),
                         unit: option.getAttribute('data-unit'),
                         price: parseFloat(option.getAttribute('data-price')),
@@ -207,16 +207,9 @@ function addMaterialToCalculation(materialData) {
 
 /**
  * Расчет стоимости для одной позиции
- * @param {number} price - Цена за м²
- * @param {number} length - Длина в метрах
- * @param {number} overallWidth - Габаритная ширина
- * @param {number} quantity - Количество листов
- * @returns {number} - Итоговая стоимость
  */
 function calculateItemTotal(price, length, overallWidth, quantity) {
-    // Стоимость одного листа = длина * цена за м² * габаритная ширина
     const pricePerSheet = length * price * overallWidth;
-    // Общая стоимость = стоимость одного листа * количество
     return pricePerSheet * quantity;
 }
 
@@ -347,7 +340,7 @@ function updateCalculationTable() {
 /**
  * Сохранение расчета
  */
-function saveCalculation() {
+async function saveCalculation() {
     const calculationName = document.getElementById('calculationName').value;
     
     if (itemsData.length === 0) {
@@ -361,56 +354,40 @@ function saveCalculation() {
         return;
     }
     
-    // Получаем данные текущего пользователя
-    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    
-    if (!currentUser) {
-        alert('Необходимо авторизоваться');
-        return;
+    try {
+        // Подготавливаем данные для сохранения
+        const totalAmount = itemsData.reduce((sum, item) => sum + item.total, 0);
+        
+        const calculationData = {
+            name: calculationName,
+            type: 'cost',
+            amount: totalAmount,
+            details: {
+                items: itemsData.map(item => ({
+                    materialId: item.materialId,
+                    priceId: item.priceId,
+                    name: item.name,
+                    length: item.length,
+                    quantity: item.quantity,
+                    price: item.price,
+                    total: item.total
+                }))
+            }
+        };
+        
+        // Сохраняем расчет
+        await api.calculations.create(calculationData);
+        
+        alert('Расчет успешно сохранен');
+        
+        // Сбрасываем форму
+        document.getElementById('calculationName').value = '';
+        itemsData = [];
+        updateCalculationTable();
+    } catch (error) {
+        console.error('Ошибка при сохранении расчета:', error);
+        alert(error.message || 'Ошибка при сохранении расчета');
     }
-    
-    // Подготавливаем данные для сохранения
-    const totalAmount = itemsData.reduce((sum, item) => sum + item.total, 0);
-    
-    const calculationData = {
-        date: new Date().toISOString(),
-        name: calculationName,
-        type: 'cost',
-        amount: totalAmount,
-        userId: currentUser.id,
-        details: {
-            items: itemsData.map(item => ({
-                name: item.name,
-                length: item.length,
-                quantity: item.quantity,
-                price: item.price,
-                total: item.total
-            }))
-        }
-    };
-    
-    // Получаем текущие сохраненные расчеты
-    let savedCalculations = localStorage.getItem('savedCalculations');
-    
-    if (savedCalculations) {
-        savedCalculations = JSON.parse(savedCalculations);
-    } else {
-        savedCalculations = [];
-    }
-    
-    // Добавляем новый расчет
-    calculationData.id = savedCalculations.length + 1;
-    savedCalculations.push(calculationData);
-    
-    // Сохраняем обновленный список
-    localStorage.setItem('savedCalculations', JSON.stringify(savedCalculations));
-    
-    alert('Расчет успешно сохранен');
-    
-    // Сбрасываем форму
-    document.getElementById('calculationName').value = '';
-    itemsData = [];
-    updateCalculationTable();
 }
 
 /**
@@ -436,7 +413,7 @@ function printCalculation() {
                 table { width: 100%; border-collapse: collapse; margin: 20px 0; }
                 th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
                 th { background-color: #f2f2f2; }
-                .total { font-weight: bold; text-align: right; }
+                .text-right { text-align: right; }
                 .company-info { margin-bottom: 20px; }
             </style>
         </head>
