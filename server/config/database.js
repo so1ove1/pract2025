@@ -1,8 +1,16 @@
 import { Sequelize } from 'sequelize';
+import dotenv from 'dotenv';
 
-const sequelize = new Sequelize('bratskprof_bit', 'bratskprof_bit', 'a*q0@U@[', {
-    host: 'localhost',
-    dialect: 'mysql',
+dotenv.config();
+
+const sequelize = new Sequelize(process.env.SUPABASE_DB_URL, {
+    dialect: 'postgres',
+    dialectOptions: {
+        ssl: {
+            require: true,
+            rejectUnauthorized: false
+        }
+    },
     logging: false,
     timezone: '+05:00',
     define: {
