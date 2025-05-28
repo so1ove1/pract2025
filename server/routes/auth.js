@@ -2,6 +2,7 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { User } from '../models/index.js';
+import { authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -9,14 +10,14 @@ const router = express.Router();
 router.get('/users', async (req, res) => {
     try {
         const users = await User.findAll({
-            attributes: ['login', 'name'], // Only send necessary fields
-            order: [['name', 'ASC']] // Sort by name
+            attributes: ['id', 'login', 'name', 'role', 'lastLogin'],
+            order: [['name', 'ASC']]
         });
         
         res.json(users);
     } catch (error) {
         console.error('Error fetching users:', error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Ошибка сервера' });
     }
 });
 

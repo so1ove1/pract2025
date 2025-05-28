@@ -3,6 +3,7 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import sequelize from './server/config/database.js';
 import authRoutes from './server/routes/auth.js';
 import materialsRoutes from './server/routes/materials.js';
 import pricesRoutes from './server/routes/prices.js';
@@ -30,19 +31,28 @@ app.use(express.static('.'));
 
 // Handle all other routes
 app.get('*', (req, res) => {
-  if (req.url.startsWith('/api/')) {
-    return res.status(404).json({ message: 'API endpoint not found' });
-  }
-  res.sendFile(join(__dirname, 'index.html'));
+    if (req.url.startsWith('/api/')) {
+        return res.status(404).json({ message: 'API endpoint not found' });
+    }
+    res.sendFile(join(__dirname, 'index.html'));
 });
 
 // Error handler
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: 'Internal Server Error' });
+    console.error(err.stack);
+    res.status(500).json({ 
+        message: process.env.NODE_ENV === 'development' 
+            ? err.message 
+            : 'Internal Server Error'
+    });
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+// Initialize database and start server
+sequelize.sync().then(() => {
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+    });
+}).catch(err => {
+    console.error('Database connection failed:', err);
 });
