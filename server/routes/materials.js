@@ -4,19 +4,17 @@ import { authenticateToken, isAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Get all categories
+// Получение всех категорий
 router.get('/categories', authenticateToken, async (req, res) => {
     try {
-        const categories = await Category.findAll({
-            order: [['name', 'ASC']]
-        });
+        const categories = await Category.findAll();
         res.json(categories);
     } catch (error) {
         res.status(500).json({ message: 'Ошибка при получении категорий' });
     }
 });
 
-// Get all materials
+// Получение всех материалов
 router.get('/', authenticateToken, async (req, res) => {
     try {
         const { categoryId } = req.query;
@@ -24,8 +22,7 @@ router.get('/', authenticateToken, async (req, res) => {
         
         const materials = await Material.findAll({
             where,
-            include: [{ model: Category }],
-            order: [['name', 'ASC']]
+            include: [{ model: Category }]
         });
         
         res.json(materials);
@@ -34,7 +31,7 @@ router.get('/', authenticateToken, async (req, res) => {
     }
 });
 
-// Create material (admin only)
+// Создание материала (только для админов)
 router.post('/', authenticateToken, isAdmin, async (req, res) => {
     try {
         const material = await Material.create(req.body);
@@ -44,7 +41,7 @@ router.post('/', authenticateToken, isAdmin, async (req, res) => {
     }
 });
 
-// Update material (admin only)
+// Обновление материала (только для админов)
 router.put('/:id', authenticateToken, isAdmin, async (req, res) => {
     try {
         const material = await Material.findByPk(req.params.id);
@@ -60,7 +57,7 @@ router.put('/:id', authenticateToken, isAdmin, async (req, res) => {
     }
 });
 
-// Delete material (admin only)
+// Удаление материала (только для админов)
 router.delete('/:id', authenticateToken, isAdmin, async (req, res) => {
     try {
         const material = await Material.findByPk(req.params.id);

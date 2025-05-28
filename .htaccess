@@ -1,7 +1,17 @@
-PassengerNodejs /home/u/bratskprof/.local/bin/node
-PassengerAppRoot /home/u/bratskprof/manager.bratskprofil.ru
+PassengerNodejs /home/b/bratskprof/.local/bin/node
+PassengerAppRoot /home/b/bratskprof/manager/project
 PassengerAppType node
 PassengerStartupFile server.js
+
+# Set proper MIME types
+AddType application/javascript .js
+AddType application/json .json
+AddType text/css .css
+
+# Enable CORS
+Header set Access-Control-Allow-Origin "*"
+Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+Header set Access-Control-Allow-Headers "Content-Type, Authorization"
 
 <IfModule mod_rewrite.c>
     RewriteEngine On
@@ -18,13 +28,3 @@ PassengerStartupFile server.js
     # For all other requests, serve index.html
     RewriteRule ^ index.html [L]
 </IfModule>
-
-# Set proper MIME types
-AddType application/javascript .js
-AddType application/json .json
-AddType text/css .css
-
-# Enable CORS
-Header set Access-Control-Allow-Origin "*"
-Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
-Header set Access-Control-Allow-Headers "Content-Type, Authorization"

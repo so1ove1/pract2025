@@ -4,7 +4,7 @@ import { authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Get calculations history
+// Получение истории расчетов пользователя
 router.get('/', authenticateToken, async (req, res) => {
     try {
         const { dateFrom, dateTo, type, amountFrom, amountTo } = req.query;
@@ -35,7 +35,7 @@ router.get('/', authenticateToken, async (req, res) => {
     }
 });
 
-// Save calculation
+// Сохранение расчета
 router.post('/', authenticateToken, async (req, res) => {
     try {
         const calculation = await Calculation.create({
@@ -49,7 +49,7 @@ router.post('/', authenticateToken, async (req, res) => {
     }
 });
 
-// Delete calculation
+// Удаление расчета
 router.delete('/:id', authenticateToken, async (req, res) => {
     try {
         const calculation = await Calculation.findOne({

@@ -1,10 +1,10 @@
 import express from 'express';
-import { Material, Price, Category } from '../models/index.js';
+import { Material, Price } from '../models/index.js';
 import { authenticateToken, isAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Get price list
+// Получение прайс-листа
 router.get('/', authenticateToken, async (req, res) => {
     try {
         const { categoryId } = req.query;
@@ -12,31 +12,18 @@ router.get('/', authenticateToken, async (req, res) => {
         const prices = await Price.findAll({
             include: [{
                 model: Material,
-                where: categoryId ? { categoryId } : {},
-                include: [{ model: Category }]
+                where: categoryId ? { categoryId } : {}
             }],
             order: [['date', 'DESC']]
         });
         
-        // Transform data to match the expected format
-        const transformedPrices = prices.map(price => ({
-            id: price.id,
-            materialId: price.Material.id,
-            materialName: price.Material.name,
-            categoryName: price.Material.Category.name,
-            coating: price.coating,
-            thickness: price.thickness,
-            price: price.price,
-            date: price.date
-        }));
-        
-        res.json(transformedPrices);
+        res.json(prices);
     } catch (error) {
         res.status(500).json({ message: 'Ошибка при получении прайс-листа' });
     }
 });
 
-// Add price (admin only)
+// Добавление позиции в прайс-лист (только для админов)
 router.post('/', authenticateToken, isAdmin, async (req, res) => {
     try {
         const price = await Price.create(req.body);
@@ -46,7 +33,7 @@ router.post('/', authenticateToken, isAdmin, async (req, res) => {
     }
 });
 
-// Update price (admin only)
+// Обновление позиции в прайс-листе (только для админов)
 router.put('/:id', authenticateToken, isAdmin, async (req, res) => {
     try {
         const price = await Price.findByPk(req.params.id);
@@ -62,7 +49,7 @@ router.put('/:id', authenticateToken, isAdmin, async (req, res) => {
     }
 });
 
-// Delete price (admin only)
+// Удаление позиции из прайс-листа (только для админов)
 router.delete('/:id', authenticateToken, isAdmin, async (req, res) => {
     try {
         const price = await Price.findByPk(req.params.id);
