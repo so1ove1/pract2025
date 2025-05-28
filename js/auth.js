@@ -18,7 +18,11 @@ async function initAuthForm() {
     }
     
     try {
-        const users = await api.auth.getUsers();
+        const response = await fetch('http://localhost:3001/api/auth/users');
+        if (!response.ok) {
+            throw new Error('Failed to fetch users');
+        }
+        const users = await response.json();
         
         users.forEach(user => {
             const option = document.createElement('option');
