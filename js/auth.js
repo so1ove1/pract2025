@@ -1,5 +1,3 @@
-import { createClient } from '@supabase/supabase-js';
-
 import { api } from './main.js';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -12,19 +10,16 @@ async function initAuthForm() {
     const authForm = document.getElementById('authForm');
     const authError = document.getElementById('authError');
     
-    // Проверяем, есть ли текущий пользователь
+    // Check if user is already logged in
     const token = localStorage.getItem('token');
     if (token) {
-        // Если пользователь авторизован, перенаправляем на главную
         window.location.href = 'index.html';
         return;
     }
     
-    // Загружаем список пользователей для выпадающего списка
     try {
         const users = await api.auth.getUsers();
         
-        // Заполняем выпадающий список
         users.forEach(user => {
             const option = document.createElement('option');
             option.value = user.login;
@@ -33,10 +28,9 @@ async function initAuthForm() {
         });
     } catch (error) {
         console.error('Error loading users:', error);
-        authError.textContent = 'Error loading data. Please refresh the page.';
+        authError.textContent = 'Error loading users. Please refresh the page.';
     }
     
-    // Обработчик отправки формы
     authForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         
@@ -51,17 +45,27 @@ async function initAuthForm() {
         authError.textContent = '';
         
         try {
-            const response = await api.auth.login({ login, password });
+            const response = await fetch('http://localhost:3001/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ login, password })
+            });
             
-            // Сохраняем токен и данные пользователя
-            localStorage.setItem('token', response.token);
-            localStorage.setItem('currentUser', JSON.stringify(response.user));
+            const data = await response.json();
             
-            // Перенаправляем на главную страницу
+            if (!response.ok) {
+                throw new Error(data.message || 'Authentication failed');
+            }
+            
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('currentUser', JSON.stringify(data.user));
+            
             window.location.href = 'index.html';
         } catch (error) {
-            console.error('Ошибка при авторизации:', error);
-            authError.textContent = error.message || 'Ошибка авторизации. Пожалуйста, попробуйте позже.';
+            console.error('Authentication error:', error);
+            authError.textContent = error.message || 'Authentication failed';
         }
     });
 }
