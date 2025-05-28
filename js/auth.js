@@ -1,51 +1,48 @@
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+    import.meta.env.VITE_SUPABASE_URL,
+    import.meta.env.VITE_SUPABASE_ANON_KEY
+);
+
 document.addEventListener('DOMContentLoaded', () => {
-    // Инициализация формы авторизации
     initAuthForm();
-    
-    // Настройка переключателя видимости пароля
     setupPasswordToggle();
 });
 
-/**
- * Инициализация формы авторизации
- */
 async function initAuthForm() {
     const userSelect = document.getElementById('userSelect');
     const authForm = document.getElementById('authForm');
     const authError = document.getElementById('authError');
     
-    // Проверяем, есть ли текущий пользователь
-    const token = localStorage.getItem('token');
-    if (token) {
-        // Если пользователь авторизован, перенаправляем на главную
+    // Check if user is already authenticated
+    const session = await supabase.auth.getSession();
+    if (session?.data?.session) {
         window.location.href = 'index.html';
         return;
     }
     
-    // Загружаем список пользователей для выпадающего списка
+    // Load users for dropdown
     try {
-        const response = await fetch('/api/auth/users');
+        const { data: users, error } = await supabase
+            .from('users')
+            .select('login, name')
+            .order('name');
+            
+        if (error) throw error;
         
-        if (!response.ok) {
-            throw new Error('Ошибка загрузки пользователей');
-        }
-        
-        const users = await response.json();
-        
-        // Заполняем выпадающий список
         users.forEach(user => {
             const option = document.createElement('option');
             option.value = user.login;
             option.textContent = user.name;
             userSelect.appendChild(option);
         });
-        
     } catch (error) {
         console.error('Ошибка при загрузке пользователей:', error);
         authError.textContent = 'Ошибка загрузки данных. Пожалуйста, обновите страницу.';
     }
     
-    // Обработчик отправки формы
+    // Handle form submission
     authForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         
@@ -57,52 +54,45 @@ async function initAuthForm() {
             return;
         }
         
-        // Очищаем сообщение об ошибке
         authError.textContent = '';
         
         try {
-            const response = await fetch('/api/auth/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ login, password }),
-                credentials: 'include'
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email: `${login}@bratskprofil.ru`,
+                password: password
             });
             
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Ошибка авторизации');
-            }
+            if (error) throw error;
             
-            const data = await response.json();
+            // Get user details
+            const { data: userData, error: userError } = await supabase
+                .from('users')
+                .select('*')
+                .eq('login', login)
+                .single();
+                
+            if (userError) throw userError;
             
-            // Сохраняем токен и данные пользователя
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('currentUser', JSON.stringify(data.user));
+            // Store user data
+            localStorage.setItem('currentUser', JSON.stringify(userData));
             
-            // Перенаправляем на главную страницу
+            // Redirect to home page
             window.location.href = 'index.html';
         } catch (error) {
             console.error('Ошибка при авторизации:', error);
-            authError.textContent = error.message || 'Ошибка авторизации. Пожалуйста, попробуйте позже.';
+            authError.textContent = 'Неверный логин или пароль';
         }
     });
 }
 
-/**
- * Настройка переключателя видимости пароля
- */
 function setupPasswordToggle() {
     const passwordInput = document.getElementById('password');
     const toggleButton = document.getElementById('togglePassword');
     
     toggleButton.addEventListener('click', () => {
-        // Изменяем тип поля ввода
         const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
         passwordInput.setAttribute('type', type);
         
-        // Изменяем иконку
         const iconClass = type === 'password' ? 'fa-eye' : 'fa-eye-slash';
         toggleButton.querySelector('i').className = `fas ${iconClass}`;
     });
