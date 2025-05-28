@@ -47,7 +47,7 @@ const PORT = 8080;
 sequelize.authenticate()
     .then(() => {
         console.log('Database connection established');
-        app.listen(PORT, '127.0.0.1', () => {
+        app.listen(PORT, () => {
             console.log(`Server running on port ${PORT}`);
         });
     })
