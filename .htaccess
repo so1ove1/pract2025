@@ -9,7 +9,7 @@ AddType application/json .json
 AddType text/css .css
 
 # Enable CORS
-Header set Access-Control-Allow-Origin "*"
+Header set Access-Control-Allow-Origin "https://manager.bratskprofil.ru"
 Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
 Header set Access-Control-Allow-Headers "Content-Type, Authorization"
 

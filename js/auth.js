@@ -30,10 +30,20 @@ async function initAuthForm() {
     
     // Загружаем список пользователей для выпадающего списка
     try {
-        const users = await api.auth.getUsers();
+        const response = await fetch('/api/auth/users');
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (!Array.isArray(data)) {
+            throw new Error('Invalid data format received from server');
+        }
         
         // Заполняем выпадающий список
-        users.forEach(user => {
+        data.forEach(user => {
             const option = document.createElement('option');
             option.value = user.login;
             option.textContent = user.name;
@@ -42,7 +52,8 @@ async function initAuthForm() {
         
     } catch (error) {
         console.error('Ошибка при загрузке пользователей:', error);
-        authError.textContent = 'Ошибка загрузки данных. Пожалуйста, обновите страницу.';
+        authError.textContent = 'Сервер временно недоступен. Пожалуйста, попробуйте позже.';
+        userSelect.disabled = true;
     }
     
     // Обработчик отправки формы
