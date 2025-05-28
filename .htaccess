@@ -6,18 +6,25 @@ PassengerStartupFile server.js
 <IfModule mod_rewrite.c>
     RewriteEngine On
     
-    # If the request is not for an existing file or directory
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteCond %{REQUEST_FILENAME} !-d
+    # If the request is for an existing file or directory, serve it directly
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
     
-    # If the request starts with /api, rewrite to the Node.js server
+    # Handle API requests
     RewriteCond %{REQUEST_URI} ^/api/
     RewriteRule ^(.*)$ http://127.0.0.1:3000/$1 [P,L]
     
     # For all other requests, serve index.html
-    RewriteRule ^(.*)$ /index.html [L,QSA]
+    RewriteRule ^ index.html [L]
 </IfModule>
 
 # Set proper MIME types
 AddType application/javascript .js
 AddType application/json .json
+AddType text/css .css
+
+# Enable CORS
+Header set Access-Control-Allow-Origin "*"
+Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+Header set Access-Control-Allow-Headers "Content-Type, Authorization"

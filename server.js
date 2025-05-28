@@ -20,14 +20,14 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Serve static files
+app.use(express.static('.'));
+
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/materials', materialsRoutes);
 app.use('/api/prices', pricesRoutes);
 app.use('/api/calculations', calculationsRoutes);
-
-// Serve static files
-app.use(express.static('.'));
 
 // Handle all other routes
 app.get('*', (req, res) => {
@@ -40,19 +40,23 @@ app.get('*', (req, res) => {
 // Error handler
 app.use((err, req, res, next) => {
     console.error(err.stack);
-    res.status(500).json({ 
-        message: process.env.NODE_ENV === 'development' 
-            ? err.message 
-            : 'Internal Server Error'
+    const statusCode = err.statusCode || 500;
+    res.status(statusCode).json({ 
+        message: err.message || 'Internal Server Error'
     });
 });
 
 // Initialize database and start server
-sequelize.sync().then(() => {
-    const PORT = process.env.PORT || 3000;
-    app.listen(PORT, () => {
-        console.log(`Server running on port ${PORT}`);
+const PORT = process.env.PORT || 3000;
+
+sequelize.authenticate()
+    .then(() => {
+        console.log('Database connection established');
+        app.listen(PORT, () => {
+            console.log(`Server running on port ${PORT}`);
+        });
+    })
+    .catch(err => {
+        console.error('Database connection failed:', err);
+        process.exit(1);
     });
-}).catch(err => {
-    console.error('Database connection failed:', err);
-});
