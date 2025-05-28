@@ -5,6 +5,21 @@ import { User } from '../models/index.js';
 
 const router = express.Router();
 
+// Get all users (for dropdown)
+router.get('/users', async (req, res) => {
+    try {
+        const users = await User.findAll({
+            attributes: ['login', 'name'], // Only send necessary fields
+            order: [['name', 'ASC']] // Sort by name
+        });
+        
+        res.json(users);
+    } catch (error) {
+        console.error('Error fetching users:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 // Аутентификация пользователя
 router.post('/login', async (req, res) => {
     try {

@@ -142,7 +142,7 @@ export function formatCurrency(value) {
 export const api = {
     // Аутентификация
     auth: {
-        getUsers: () => fetchAPI('/users'),
+        getUsers: () => fetchAPI('/auth/users'),
         login: (credentials) => fetchAPI('/auth/login', {
             method: 'POST',
             body: JSON.stringify(credentials)
