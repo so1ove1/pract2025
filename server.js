@@ -8,14 +8,12 @@ import materialsRoutes from './server/routes/materials.js';
 import pricesRoutes from './server/routes/prices.js';
 import calculationsRoutes from './server/routes/calculations.js';
 
-// Load environment variables
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
@@ -32,15 +30,19 @@ app.use(express.static('.'));
 
 // Handle all other routes
 app.get('*', (req, res) => {
-  // Check if request is for an API endpoint
   if (req.url.startsWith('/api/')) {
     return res.status(404).json({ message: 'API endpoint not found' });
   }
-  
-  // For all other routes, serve the index.html
   res.sendFile(join(__dirname, 'index.html'));
 });
 
+// Error handler
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ message: 'Internal Server Error' });
+});
+
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

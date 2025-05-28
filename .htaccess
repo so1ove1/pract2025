@@ -1,4 +1,4 @@
-PassengerNodejs /home/u/username/.local/bin/node
-PassengerAppRoot /home/u/username/manager.bratskprofil.ru
+PassengerNodejs /home/u/bratskprof/.local/bin/node
+PassengerAppRoot /home/u/bratskprof/manager.bratskprofil.ru
 PassengerAppType node
 PassengerStartupFile server.js
