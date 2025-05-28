@@ -2,8 +2,6 @@
  * auth.js - Скрипт для страницы авторизации
  */
 
-import { api } from './main.js';
-
 document.addEventListener('DOMContentLoaded', () => {
     // Инициализация формы авторизации
     initAuthForm();
@@ -30,20 +28,21 @@ async function initAuthForm() {
     
     // Загружаем список пользователей для выпадающего списка
     try {
-        const response = await fetch('/api/auth/users');
+        const response = await fetch('/api/auth/users', {
+            credentials: 'include',
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
         
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         
-        const data = await response.json();
-        
-        if (!Array.isArray(data)) {
-            throw new Error('Invalid data format received from server');
-        }
+        const users = await response.json();
         
         // Заполняем выпадающий список
-        data.forEach(user => {
+        users.forEach(user => {
             const option = document.createElement('option');
             option.value = user.login;
             option.textContent = user.name;
@@ -72,17 +71,32 @@ async function initAuthForm() {
         authError.textContent = '';
         
         try {
-            const response = await api.auth.login({ login, password });
+            const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ login, password })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Ошибка авторизации');
+            }
+
+            const data = await response.json();
             
             // Сохраняем токен и данные пользователя
-            localStorage.setItem('token', response.token);
-            localStorage.setItem('currentUser', JSON.stringify(response.user));
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('currentUser', JSON.stringify(data.user));
             
             // Перенаправляем на главную страницу
             window.location.href = 'index.html';
         } catch (error) {
             console.error('Ошибка при авторизации:', error);
-            authError.textContent = error.message || 'Ошибка авторизации. Пожалуйста, попробуйте позже.';
+            authError.textContent = error.message || 'Неверный логин или пароль';
         }
     });
 }
