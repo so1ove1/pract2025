@@ -109,13 +109,15 @@
 
     <!-- Модальное окно просмотра расчета -->
     <div class="modal" id="viewCalculationModal">
-        <div class="modal-content modal-lg">
+        <div class="modal-content modal-xl">
             <div class="modal-header">
                 <h2 id="calculationModalTitle">Просмотр расчета</h2>
                 <button class="close-btn" id="closeCalculationModalBtn">&times;</button>
             </div>
             <div class="modal-body" id="calculationModalBody">
-                <!-- Содержимое расчета будет добавлено динамически -->
+                <div class="calculation-info">
+                    <!-- Информация о расчете будет добавлена динамически -->
+                </div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" id="printCalculationBtn">

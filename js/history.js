@@ -264,43 +264,49 @@ function viewCalculation(calculationId) {
 
     // Формируем содержимое модального окна
     let detailsHtml = `
-        <p><strong>Название:</strong> ${calculation.name}</p>
-        <p><strong>Тип:</strong> ${typeDisplayNames[calculation.type] || 'Неизвестный тип'}</p>
-        <p><strong>Сумма:</strong> ${formatCurrency(calculation.amount)} ₽</p>
-        <p><strong>Дата:</strong> ${formatDate(calculation.created_at)}</p>
+        <div class="calculation-info">
+            <p><strong>Название:</strong> ${calculation.name}</p>
+            <p><strong>Тип:</strong> ${typeDisplayNames[calculation.type] || 'Неизвестный тип'}</p>
+            <p><strong>Дата:</strong> ${formatDate(calculation.created_at)}</p>
+        </div>
     `;
 
     if (calculation.details && calculation.details.items) {
         detailsHtml += `
-            <h5>Детали расчета</h5>
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>№</th>
-                        <th>Материал</th>
-                        <th>Ед. изм.</th>
-                        <th>Длина, м</th>
-                        <th>Количество</th>
-                        <th>Цена за м², ₽</th>
-                        <th>Цена за шт., ₽</th>
-                        <th>Сумма, ₽</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${calculation.details.items.map((item, index) => `
+            <div class="calculation-details">
+                <h3>Детали расчета</h3>
+                <table>
+                    <thead>
                         <tr>
-                            <td>${index + 1}</td>
-                            <td>${item.name}</td>
-                            <td>${item.unit || 'м²'}</td>
-                            <td>${item.length || '-'}</td>
-                            <td>${item.quantity || '-'}</td>
-                            <td>${item.pricePerM2 ? formatCurrency(item.pricePerM2) : formatCurrency(item.price)}</td>
-                            <td>${item.pricePerPiece ? formatCurrency(item.pricePerPiece) : formatCurrency(item.price)}</td>
-                            <td>${formatCurrency(item.total)}</td>
+                            <th>№</th>
+                            <th>Материал</th>
+                            <th>Ед. изм.</th>
+                            <th>Длина, м</th>
+                            <th>Количество</th>
+                            <th>Цена за м², ₽</th>
+                            <th>Цена за шт., ₽</th>
+                            <th>Сумма, ₽</th>
                         </tr>
-                    `).join('')}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        ${calculation.details.items.map((item, index) => `
+                            <tr>
+                                <td>${index + 1}</td>
+                                <td>${item.name}</td>
+                                <td>${item.unit || 'м²'}</td>
+                                <td>${item.length || '-'}</td>
+                                <td>${item.quantity || '-'}</td>
+                                <td>${item.pricePerM2 ? formatCurrency(item.pricePerM2) : formatCurrency(item.price)}</td>
+                                <td>${item.pricePerPiece ? formatCurrency(item.pricePerPiece) : formatCurrency(item.price)}</td>
+                                <td>${formatCurrency(item.total)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                <div class="calculation-total">
+                    Итого: ${formatCurrency(calculation.amount)} ₽
+                </div>
+            </div>
         `;
     }
 
@@ -330,11 +336,46 @@ function printCalculationDetails() {
         <head>
             <title>Детали расчета</title>
             <style>
-                body { font-family: Arial, sans-serif; margin: 20px; }
-                h5 { color: #2B5DA2; }
-                table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-                th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
-                th { background-color: #f2f2f2; }
+                body { 
+                    font-family: Arial, sans-serif; 
+                    margin: 20px;
+                    color: #1E293B;
+                }
+                .calculation-info {
+                    margin-bottom: 24px;
+                    padding: 16px;
+                    background-color: #F8FAFC;
+                    border-radius: 8px;
+                }
+                h3 { 
+                    color: #2B5DA2;
+                    margin-bottom: 16px;
+                }
+                table { 
+                    width: 100%; 
+                    border-collapse: collapse; 
+                    margin: 20px 0;
+                    background-color: white;
+                    border-radius: 8px;
+                    overflow: hidden;
+                }
+                th, td { 
+                    padding: 12px; 
+                    text-align: left; 
+                    border-bottom: 1px solid #E2E8F0;
+                }
+                th { 
+                    background-color: #F8FAFC;
+                    font-weight: 500;
+                    color: #334155;
+                }
+                .calculation-total {
+                    margin-top: 20px;
+                    text-align: right;
+                    font-size: 1.2rem;
+                    font-weight: 500;
+                    color: #2B5DA2;
+                }
             </style>
         </head>
         <body>
