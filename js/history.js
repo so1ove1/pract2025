@@ -9,6 +9,14 @@ let filteredData = []; // Массив для хранения отфильтр�
 const itemsPerPage = 10; // Количество записей на странице
 let currentPage = 1; // Текущая страница
 
+// Маппинг типов расчетов на отображаемые названия
+const typeDisplayNames = {
+    'cost': 'Расчет стоимости',
+    'materials-fence': 'Расчет забора',
+    'materials-roof': 'Расчет крыши',
+    'materials-siding': 'Расчет обшивки'
+};
+
 document.addEventListener('DOMContentLoaded', async () => {
     // Загрузка данных
     await loadHistoryData();
@@ -16,6 +24,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Инициализация кнопок фильтров
     const applyFiltersBtn = document.getElementById('applyFiltersBtn');
     const resetFiltersBtn = document.getElementById('resetFiltersBtn');
+    const searchInput = document.getElementById('searchName');
     
     if (applyFiltersBtn) {
         applyFiltersBtn.addEventListener('click', applyFilters);
@@ -23,6 +32,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     if (resetFiltersBtn) {
         resetFiltersBtn.addEventListener('click', resetFilters);
+    }
+
+    // Добавляем обработчик для поиска по названию
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            applyFilters();
+        });
     }
     
     // Инициализация модального окна просмотра расчета
@@ -70,12 +86,13 @@ async function loadHistoryData() {
 /**
  * Применение фильтров
  */
-async function applyFilters() {
+function applyFilters() {
     const dateFrom = document.getElementById('dateFrom').value;
     const dateTo = document.getElementById('dateTo').value;
     const calculationType = document.getElementById('calculationType').value;
     const amountFrom = document.getElementById('amountFrom').value;
     const amountTo = document.getElementById('amountTo').value;
+    const searchName = document.getElementById('searchName').value.toLowerCase();
 
     // Валидация фильтров
     if (dateFrom && dateTo && new Date(dateFrom) > new Date(dateTo)) {
@@ -88,54 +105,56 @@ async function applyFilters() {
         return;
     }
 
-    try {
-        // Формируем параметры запроса
-        const params = {};
+    // Применяем фильтры
+    filteredData = historyData.filter(item => {
+        // Фильтр по названию
+        if (searchName && !item.name.toLowerCase().includes(searchName)) {
+            return false;
+        }
 
+        // Фильтр по датам
         if (dateFrom) {
-            // Начало дня для dateFrom
-            params.dateFrom = new Date(dateFrom).toISOString();
+            const itemDate = new Date(item.created_at);
+            const fromDate = new Date(dateFrom);
+            fromDate.setHours(0, 0, 0, 0);
+            if (itemDate < fromDate) return false;
         }
+        
         if (dateTo) {
-            // Конец дня для dateTo
-            const endOfDay = new Date(dateTo);
-            endOfDay.setHours(23, 59, 59, 999);
-            params.dateTo = endOfDay.toISOString();
-        }
-        if (calculationType) {
-            params.type = calculationType;
-        }
-        if (amountFrom) {
-            const parsedAmountFrom = parseFloat(amountFrom);
-            if (!isNaN(parsedAmountFrom)) {
-                params.amountFrom = parsedAmountFrom;
-            }
-        }
-        if (amountTo) {
-            const parsedAmountTo = parseFloat(amountTo);
-            if (!isNaN(parsedAmountTo)) {
-                params.amountTo = parsedAmountTo;
-            }
+            const itemDate = new Date(item.created_at);
+            const toDate = new Date(dateTo);
+            toDate.setHours(23, 59, 59, 999);
+            if (itemDate > toDate) return false;
         }
 
-        // Получаем отфильтрованные данные через API
-        filteredData = await api.calculations.getAll(params);
-        
-        // Сбрасываем на первую страницу
-        currentPage = 1;
-        
-        // Отображаем отфильтрованные данные
-        displayHistoryData();
-    } catch (error) {
-        console.error('Ошибка при применении фильтров:', error);
-        alert(error.message || 'Ошибка при применении фильтров');
-    }
+        // Фильтр по типу расчета
+        if (calculationType && item.type !== calculationType) {
+            return false;
+        }
+
+        // Фильтр по сумме
+        if (amountFrom && item.amount < parseFloat(amountFrom)) {
+            return false;
+        }
+        if (amountTo && item.amount > parseFloat(amountTo)) {
+            return false;
+        }
+
+        return true;
+    });
+
+    // Сбрасываем на первую страницу
+    currentPage = 1;
+    
+    // Отображаем отфильтрованные данные
+    displayHistoryData();
 }
 
 /**
  * Сброс фильтров
  */
 function resetFilters() {
+    document.getElementById('searchName').value = '';
     document.getElementById('dateFrom').value = '';
     document.getElementById('dateTo').value = '';
     document.getElementById('calculationType').value = '';
@@ -171,21 +190,13 @@ function displayHistoryData() {
     const endIndex = startIndex + itemsPerPage;
     const pageData = filteredData.slice(startIndex, endIndex);
 
-    // Маппинг типов расчетов на отображаемые названия
-    const typeDisplayNames = {
-        'calculation-fence': 'Расчет забора',
-        'calculation-roof': 'Расчет крыши',
-        'calculation-siding': 'Расчет обшивки',
-        'calculation-cost': 'Расчет стоимости'
-    };
-
     pageData.forEach(item => {
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${formatDate(item.created_at)}</td>
             <td>${item.name}</td>
             <td>${typeDisplayNames[item.type] || item.type}</td>
-            <td>${formatCurrency(item.amount)}</td>
+            <td>${formatCurrency(item.amount)} ₽</td>
             <td>
                 <button class="btn btn-primary btn-sm view-calculation" data-id="${item.id}">
                     <i class="fas fa-eye"></i>
@@ -247,15 +258,15 @@ function viewCalculation(calculationId) {
     const calculation = filteredData.find(item => item.id === calculationId);
     if (!calculation) return;
 
-    const modal = document.getElementById('calculationModal');
-    const modalBody = document.getElementById('calculationDetails');
+    const modal = document.getElementById('viewCalculationModal');
+    const modalBody = document.getElementById('calculationModalBody');
     if (!modal || !modalBody) return;
 
     // Формируем содержимое модального окна
     let detailsHtml = `
         <p><strong>Название:</strong> ${calculation.name}</p>
         <p><strong>Тип:</strong> ${typeDisplayNames[calculation.type] || calculation.type}</p>
-        <p><strong>Сумма:</strong> ${formatCurrency(calculation.amount)}</p>
+        <p><strong>Сумма:</strong> ${formatCurrency(calculation.amount)} ₽</p>
         <p><strong>Дата:</strong> ${formatDate(calculation.created_at)}</p>
     `;
 
@@ -301,7 +312,7 @@ function viewCalculation(calculationId) {
  * Закрытие модального окна
  */
 function closeCalculationModal() {
-    const modal = document.getElementById('calculationModal');
+    const modal = document.getElementById('viewCalculationModal');
     if (modal) {
         modal.style.display = 'none';
     }
@@ -311,7 +322,7 @@ function closeCalculationModal() {
  * Печать деталей расчета
  */
 function printCalculationDetails() {
-    const modalBody = document.getElementById('calculationDetails');
+    const modalBody = document.getElementById('calculationModalBody');
     if (!modalBody) return;
 
     const printContent = `
@@ -345,7 +356,7 @@ function printCalculationDetails() {
  * Копирование расчета
  */
 function copyCalculation() {
-    const modalBody = document.getElementById('calculationDetails');
+    const modalBody = document.getElementById('calculationModalBody');
     if (!modalBody) return;
 
     const range = document.createRange();
@@ -369,7 +380,7 @@ function copyCalculation() {
  * Обновление пагинации
  */
 function updatePagination() {
-    const pagination = document.getElementById('pagination');
+    const pagination = document.getElementById('historyPagination');
     if (!pagination) return;
 
     const pageCount = Math.ceil(filteredData.length / itemsPerPage);
@@ -380,7 +391,7 @@ function updatePagination() {
     for (let i = 1; i <= pageCount; i++) {
         const button = document.createElement('button');
         button.textContent = i;
-        button.className = i === currentPage ? 'btn btn-primary' : 'btn btn-outline-primary';
+        button.className = `btn ${i === currentPage ? 'btn-primary' : 'btn-outline-primary'}`;
         button.addEventListener('click', () => {
             currentPage = i;
             displayHistoryData();
