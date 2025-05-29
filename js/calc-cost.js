@@ -128,8 +128,8 @@ async function loadMaterialsList() {
                                     data-price="${option.price}"
                                     data-coating="${option.coating}"
                                     data-thickness="${option.thickness}"
-                                    data-overall-width="${material.overallWidth || 1}"
-                                    data-working-width="${material.workingWidth || 1}">
+                                    data-overall-width="${material.overall_width || 1}"
+                                    data-working-width="${material.working_width || 1}">
                                     ${option.coating}, ${option.thickness} мм - ${formatCurrency(option.price)} ₽/${material.unit}
                                 </option>
                             `).join('')}
@@ -207,9 +207,14 @@ function addMaterialToCalculation(materialData) {
 
 /**
  * Расчет стоимости для одной позиции
+ * @param {number} price - Цена за м²
+ * @param {number} length - Длина в метрах
+ * @param {number} overallWidth - Габаритная ширина в метрах
+ * @param {number} quantity - Количество листов
+ * @returns {number} - Итоговая стоимость
  */
 function calculateItemTotal(price, length, overallWidth, quantity) {
-    return price * length * overallWidth * quantity;
+    return price * overallWidth * length * quantity;
 }
 
 /**
