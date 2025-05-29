@@ -10,7 +10,7 @@ const router = express.Router();
 router.get('/users', async (req, res) => {
     try {
         const users = await User.findAll({
-            attributes: ['id', 'login', 'name', 'role', 'lastLogin'],
+            attributes: ['id', 'login', 'name', 'role', 'last_login'],
             order: [['name', 'ASC']]
         });
         
@@ -43,7 +43,7 @@ router.post('/login', async (req, res) => {
         }
         
         // Update last login time
-        await user.update({ lastLogin: new Date() });
+        await user.update({ last_login: new Date() });
         
         // Generate JWT token
         const token = jwt.sign(
@@ -59,7 +59,7 @@ router.post('/login', async (req, res) => {
                 login: user.login,
                 name: user.name,
                 role: user.role,
-                lastLogin: user.lastLogin
+                last_login: user.last_login
             }
         });
     } catch (error) {
