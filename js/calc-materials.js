@@ -1,3 +1,7 @@
+/**
+ * calc-materials.js - Скрипт для страницы расчета материалов
+ */
+
 import { api, formatCurrency } from './main.js';
 
 // Глобальные переменные
@@ -23,6 +27,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Настройка переключения типа крыши
     initRoofTypeToggle();
+
+    // Настройка чекбокса для второго ската
+    initSecondSlopeToggle();
 
     // Настройка кнопки добавления стены
     initAddWallButton();
@@ -115,6 +122,20 @@ function initRoofTypeToggle() {
                 singleRoofParams.classList.add('hidden');
                 doubleRoofParams.classList.remove('hidden');
             }
+        });
+    }
+}
+
+/**
+ * Инициализация чекбокса для второго ската
+ */
+function initSecondSlopeToggle() {
+    const useSecondSlope = document.getElementById('useSecondSlope');
+    const secondSlopeParams = document.getElementById('secondSlopeParams');
+
+    if (useSecondSlope && secondSlopeParams) {
+        useSecondSlope.addEventListener('change', () => {
+            secondSlopeParams.classList.toggle('hidden', !useSecondSlope.checked);
         });
     }
 }

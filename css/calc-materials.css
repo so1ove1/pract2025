@@ -69,6 +69,29 @@
     color: var(--primary-color);
 }
 
+/* Стили для чекбокса */
+.checkbox-group {
+    margin: 16px 0;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: auto;
+    margin: 0;
+    cursor: pointer;
+}
+
+.checkbox-label span {
+    color: var(--gray-700);
+}
+
 /* Стили для результатов расчета */
 .calculation-results {
     margin-top: 24px;
@@ -179,4 +202,10 @@
     .material-options {
         grid-template-columns: 1fr;
     }
+}
+
+/* Анимации */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
