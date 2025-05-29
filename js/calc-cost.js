@@ -426,11 +426,10 @@ function printCalculation() {
     const calculationName = document.getElementById('calculationName').value || 'Расчет стоимости';
     const totalAmount = itemsData.reduce((sum, item) => sum + item.total, 0);
     
-    // Создаем содержимое для печати
-    let printContent = `
+    const printContent = `
         <html>
         <head>
-            <title>Расчет стоимости - ${calculationName}</title>
+            <title>${calculationName}</title>
             <style>
                 body { font-family: Arial, sans-serif; margin: 20px; }
                 h1 { color: #2B5DA2; }
@@ -438,22 +437,17 @@ function printCalculation() {
                 th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
                 th { background-color: #f2f2f2; }
                 .text-right { text-align: right; }
-                .company-info { margin-bottom: 20px; }
+                .total { font-weight: bold; }
             </style>
         </head>
         <body>
-            <div class="company-info">
-                <h1>ООО «Братск Профиль»</h1>
-                <p>Расчет стоимости материалов</p>
-            </div>
-            
-            <h2>${calculationName}</h2>
-            
+            <h1>${calculationName}</h1>
             <table>
                 <thead>
                     <tr>
                         <th>№</th>
                         <th>Название материала</th>
+                        <th>Ед. изм.</th>
                         <th>Длина, м</th>
                         <th>Кол-во, шт</th>
                         <th>Цена за м², ₽</th>
@@ -461,28 +455,21 @@ function printCalculation() {
                     </tr>
                 </thead>
                 <tbody>
-    `;
-    
-    // Добавляем строки товаров
-    itemsData.forEach((item, index) => {
-        printContent += `
-            <tr>
-                <td>${index + 1}</td>
-                <td>${item.name} (${item.coating}, ${item.thickness} мм)</td>
-                <td>${item.length}</td>
-                <td>${item.quantity}</td>
-                <td>${formatCurrency(item.price)}</td>
-                <td>${formatCurrency(item.total)}</td>
-            </tr>
-        `;
-    });
-    
-    // Добавляем итоговую сумму
-    printContent += `
+                    ${itemsData.map((item, index) => `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${item.name} (${item.coating}, ${item.thickness} мм)</td>
+                            <td>${item.unit}</td>
+                            <td>${item.length}</td>
+                            <td>${item.quantity}</td>
+                            <td>${formatCurrency(item.price)}</td>
+                            <td>${formatCurrency(item.total)}</td>
+                        </tr>
+                    `).join('')}
                 </tbody>
                 <tfoot>
                     <tr>
-                        <td colspan="5" class="text-right"><strong>Итого:</strong></td>
+                        <td colspan="6" class="text-right"><strong>Итого:</strong></td>
                         <td><strong>${formatCurrency(totalAmount)} ₽</strong></td>
                     </tr>
                 </tfoot>
@@ -491,12 +478,10 @@ function printCalculation() {
         </html>
     `;
     
-    // Открываем новое окно для печати
     const printWindow = window.open('', '_blank');
     printWindow.document.write(printContent);
     printWindow.document.close();
     
-    // Запускаем печать
     setTimeout(() => {
         printWindow.print();
     }, 500);
