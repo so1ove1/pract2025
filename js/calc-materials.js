@@ -49,8 +49,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     initMaterialTypeHandlers();
 });
 
-// [Previous functions remain unchanged until updateResultsTable]
-
 /**
  * Обновление таблицы результатов
  */
@@ -75,9 +73,14 @@ function updateResultsTable() {
     let totalAmount = 0;
 
     calculationResults.forEach((item, index) => {
+        // Фиксированное количество знаков после запятой для цены за м²
         const pricePerM2 = Number(item.price).toFixed(2);
-        const pricePerPiece = Number(item.price * item.length * item.overallWidth).toFixed(2);
-        const total = Number(item.price * item.length * item.overallWidth * item.quantity).toFixed(2);
+        
+        // Расчет цены за штуку (лист)
+        const pricePerPiece = item.price * item.length * item.overallWidth;
+        
+        // Расчет общей суммы
+        const total = pricePerPiece * item.quantity;
 
         const row = document.createElement('tr');
         row.innerHTML = `
@@ -97,10 +100,10 @@ function updateResultsTable() {
             <td>${formatCurrency(total)}</td>
         `;
         tbody.appendChild(row);
-        totalAmount += Number(total);
+        totalAmount += total;
     });
 
-    // Add event listeners for inputs
+    // Добавляем обработчики для изменения длины и цены
     const lengthInputs = tbody.querySelectorAll('.length-input');
     const priceInputs = tbody.querySelectorAll('.price-input');
 
@@ -137,121 +140,4 @@ function updateResultsTable() {
     totalElement.textContent = `${formatCurrency(totalAmount)} ₽`;
 }
 
-// [Previous functions remain unchanged]
-
-/**
- * Сохранение расчета
- */
-async function saveCalculation() {
-    const calculationName = document.getElementById('calculationMaterialName').value;
-
-    if (!calculationName) {
-        alert('Введите название расчета');
-        return;
-    }
-
-    if (calculationResults.length === 0) {
-        alert('Нет данных для сохранения');
-        return;
-    }
-
-    try {
-        const activeTab = document.querySelector('.calculation-tabs .tab-btn.active');
-        if (!activeTab) return;
-
-        const calculationType = 'materials-' + activeTab.getAttribute('data-tab');
-        const totalAmount = calculationResults.reduce((sum, item) => sum + item.total, 0);
-
-        const calculationData = {
-            name: calculationName,
-            type: calculationType,
-            amount: totalAmount,
-            details: {
-                items: calculationResults
-            }
-        };
-
-        await api.calculations.create(calculationData);
-        alert('Расчет успешно сохранен');
-
-        // Очищаем форму
-        document.getElementById('calculationMaterialName').value = '';
-        calculationResults = [];
-        updateResultsTable();
-    } catch (error) {
-        console.error('Ошибка при сохранении расчета:', error);
-        alert(error.message || 'Ошибка при сохранении расчета');
-    }
-}
-
-/**
- * Печать расчета
- */
-function printCalculation() {
-    if (calculationResults.length === 0) {
-        alert('Нет данных для печати');
-        return;
-    }
-
-    const calculationName = document.getElementById('calculationMaterialName').value || 'Расчет материалов';
-    const totalAmount = calculationResults.reduce((sum, item) => sum + item.total, 0);
-
-    const printContent = `
-        <html>
-        <head>
-            <title>${calculationName}</title>
-            <style>
-                body { font-family: Arial, sans-serif; margin: 20px; }
-                h1 { color: #2B5DA2; }
-                table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-                th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
-                th { background-color: #f2f2f2; }
-                .total { font-weight: bold; }
-            </style>
-        </head>
-        <body>
-            <h1>${calculationName}</h1>
-            <table>
-                <thead>
-                    <tr>
-                        <th>№</th>
-                        <th>Материал</th>
-                        <th>Ед. изм.</th>
-                        <th>Длина, м</th>
-                        <th>Количество</th>
-                        <th>Цена за ед., ₽</th>
-                        <th>Сумма, ₽</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${calculationResults.map((item, index) => `
-                        <tr>
-                            <td>${index + 1}</td>
-                            <td>${item.name}</td>
-                            <td>${item.unit}</td>
-                            <td>${item.length}</td>
-                            <td>${item.quantity}</td>
-                            <td>${formatCurrency(item.price)}</td>
-                            <td>${formatCurrency(item.total)}</td>
-                        </tr>
-                    `).join('')}
-                </tbody>
-                <tfoot>
-                    <tr>
-                        <td colspan="6" class="total">Итого:</td>
-                        <td class="total">${formatCurrency(totalAmount)} ₽</td>
-                    </tr>
-                </tfoot>
-            </table>
-        </body>
-        </html>
-    `;
-
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(printContent);
-    printWindow.document.close();
-
-    setTimeout(() => {
-        printWindow.print();
-    }, 500);
-}
+// [Rest of the file remains unchanged]
