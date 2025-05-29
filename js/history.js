@@ -63,6 +63,7 @@ async function loadHistoryData() {
         displayHistoryData();
     } catch (error) {
         console.error('Ошибка при загрузке истории расчетов:', error);
+        alert(error.message || 'Ошибка при загрузке истории расчетов');
     }
 }
 
@@ -75,17 +76,48 @@ async function applyFilters() {
     const calculationType = document.getElementById('calculationType').value;
     const amountFrom = document.getElementById('amountFrom').value;
     const amountTo = document.getElementById('amountTo').value;
-    
+
+    // Валидация фильтров
+    if (dateFrom && dateTo && new Date(dateFrom) > new Date(dateTo)) {
+        alert('Дата "с" не может быть позже даты "по"');
+        return;
+    }
+
+    if (amountFrom && amountTo && parseFloat(amountFrom) > parseFloat(amountTo)) {
+        alert('Сумма "от" не может быть больше суммы "до"');
+        return;
+    }
+
     try {
         // Формируем параметры запроса
         const params = {};
-        
-        if (dateFrom) params.dateFrom = dateFrom;
-        if (dateTo) params.dateTo = dateTo;
-        if (calculationType) params.type = calculationType;
-        if (amountFrom) params.amountFrom = amountFrom;
-        if (amountTo) params.amountTo = amountTo;
-        
+
+        if (dateFrom) {
+            // Начало дня для dateFrom
+            params.dateFrom = new Date(dateFrom).toISOString();
+        }
+        if (dateTo) {
+            // Конец дня для dateTo
+            const endOfDay = new Date(dateTo);
+            endOfDay.setHours(23, 59, 59, 999);
+            params.dateTo = endOfDay.toISOString();
+        }
+        if (calculationType) {
+            params.type = calculationType;
+        }
+        if (amountFrom) {
+            const parsedAmountFrom = parseFloat(amountFrom);
+            if (!isNaN(parsedAmountFrom)) {
+                params.amountFrom = parsedAmountFrom;
+            }
+        }
+        if (amountTo) {
+            const parsedAmountTo = parseFloat(amountTo);
+            if (!isNaN(parsedAmountTo)) {
+                params.amountTo = parsedAmountTo;
+            }
+        }
+
         // Получаем отфильтрованные данные через API
         filteredData = await api.calculations.getAll(params);
         
@@ -98,6 +130,93 @@ async function applyFilters() {
         console.error('Ошибка при применении фильтров:', error);
         alert(error.message || 'Ошибка при применении фильтров');
     }
+}
+
+/**
+ * Сброс фильтров
+ */
+function resetFilters() {
+    document.getElementById('dateFrom').value = '';
+    document.getElementById('dateTo').value = '';
+    document.getElementById('calculationType').value = '';
+    document.getElementById('amountFrom').value = '';
+    document.getElementById('amountTo').value = '';
+    
+    filteredData = [...historyData];
+    currentPage = 1;
+    displayHistoryData();
+}
+
+/**
+ * Отображение данных истории расчетов
+ */
+function displayHistoryData() {
+    const tbody = document.getElementById('historyTableBody');
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+
+    if (filteredData.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="5" class="text-center">Нет расчетов</td>
+            </tr>
+        `;
+        updatePagination();
+        return;
+    }
+
+    // Рассчитываем индексы для текущей страницы
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const pageData = filteredData.slice(startIndex, endIndex);
+
+    // Маппинг типов расчетов на отображаемые названия
+    const typeDisplayNames = {
+        'calculation-fence': 'Расчет забора',
+        'calculation-roof': 'Расчет крыши',
+        'calculation-siding': 'Расчет обшивки',
+        'calculation-cost': 'Расчет стоимости'
+    };
+
+    pageData.forEach(item => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${formatDate(item.created_at)}</td>
+            <td>${item.name}</td>
+            <td>${typeDisplayNames[item.type] || item.type}</td>
+            <td>${formatCurrency(item.amount)}</td>
+            <td>
+                <button class="btn btn-primary btn-sm view-calculation" data-id="${item.id}">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <button class="btn btn-danger btn-sm delete-calculation" data-id="${item.id}">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+
+    // Добавляем обработчики для кнопок просмотра и удаления
+    const viewButtons = tbody.querySelectorAll('.view-calculation');
+    const deleteButtons = tbody.querySelectorAll('.delete-calculation');
+
+    viewButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const calculationId = parseInt(button.getAttribute('data-id'));
+            viewCalculation(calculationId);
+        });
+    });
+
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const calculationId = parseInt(button.getAttribute('data-id'));
+            deleteCalculation(calculationId);
+        });
+    });
+
+    updatePagination();
 }
 
 /**
@@ -121,4 +240,151 @@ async function deleteCalculation(calculationId) {
     }
 }
 
-// ... (остальные функции остаются без изменений, они не взаимодействуют с API)
+/**
+ * Просмотр расчета
+ */
+function viewCalculation(calculationId) {
+    const calculation = filteredData.find(item => item.id === calculationId);
+    if (!calculation) return;
+
+    const modal = document.getElementById('calculationModal');
+    const modalBody = document.getElementById('calculationDetails');
+    if (!modal || !modalBody) return;
+
+    // Формируем содержимое модального окна
+    let detailsHtml = `
+        <p><strong>Название:</strong> ${calculation.name}</p>
+        <p><strong>Тип:</strong> ${typeDisplayNames[calculation.type] || calculation.type}</p>
+        <p><strong>Сумма:</strong> ${formatCurrency(calculation.amount)}</p>
+        <p><strong>Дата:</strong> ${formatDate(calculation.created_at)}</p>
+    `;
+
+    if (calculation.details && calculation.details.items) {
+        detailsHtml += `
+            <h5>Детали расчета</h5>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>№</th>
+                        <th>Материал</th>
+                        <th>Ед. изм.</th>
+                        <th>Длина, м</th>
+                        <th>Количество</th>
+                        <th>Цена за м², ₽</th>
+                        <th>Цена за шт., ₽</th>
+                        <th>Сумма, ₽</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${calculation.details.items.map((item, index) => `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${item.name}</td>
+                            <td>${item.unit || 'м²'}</td>
+                            <td>${item.length || '-'}</td>
+                            <td>${item.quantity || '-'}</td>
+                            <td>${item.pricePerM2 ? formatCurrency(item.pricePerM2) : formatCurrency(item.price)}</td>
+                            <td>${item.pricePerPiece ? formatCurrency(item.pricePerPiece) : formatCurrency(item.price)}</td>
+                            <td>${formatCurrency(item.total)}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+    }
+
+    modalBody.innerHTML = detailsHtml;
+    modal.style.display = 'block';
+}
+
+/**
+ * Закрытие модального окна
+ */
+function closeCalculationModal() {
+    const modal = document.getElementById('calculationModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+/**
+ * Печать деталей расчета
+ */
+function printCalculationDetails() {
+    const modalBody = document.getElementById('calculationDetails');
+    if (!modalBody) return;
+
+    const printContent = `
+        <html>
+        <head>
+            <title>Детали расчета</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                h5 { color: #2B5DA2; }
+                table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+                th { background-color: #f2f2f2; }
+            </style>
+        </head>
+        <body>
+            ${modalBody.innerHTML}
+        </body>
+        </html>
+    `;
+
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+
+    setTimeout(() => {
+        printWindow.print();
+    }, 500);
+}
+
+/**
+ * Копирование расчета
+ */
+function copyCalculation() {
+    const modalBody = document.getElementById('calculationDetails');
+    if (!modalBody) return;
+
+    const range = document.createRange();
+    range.selectNodeContents(modalBody);
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+
+    try {
+        document.execCommand('copy');
+        alert('Расчет скопирован в буфер обмена');
+    } catch (error) {
+        console.error('Ошибка при копировании:', error);
+        alert('Ошибка при копировании');
+    }
+
+    selection.removeAllRanges();
+}
+
+/**
+ * Обновление пагинации
+ */
+function updatePagination() {
+    const pagination = document.getElementById('pagination');
+    if (!pagination) return;
+
+    const pageCount = Math.ceil(filteredData.length / itemsPerPage);
+    pagination.innerHTML = '';
+
+    if (pageCount <= 1) return;
+
+    for (let i = 1; i <= pageCount; i++) {
+        const button = document.createElement('button');
+        button.textContent = i;
+        button.className = i === currentPage ? 'btn btn-primary' : 'btn btn-outline-primary';
+        button.addEventListener('click', () => {
+            currentPage = i;
+            displayHistoryData();
+        });
+        pagination.appendChild(button);
+    }
+}
