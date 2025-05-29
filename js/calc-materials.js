@@ -47,6 +47,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Настройка обработчиков изменения типа материала
     initMaterialTypeHandlers();
+
+    // Инициализация начальных значений для крыши
+    const roofMaterialType = document.getElementById('roofMaterialType');
+    if (roofMaterialType) {
+        updateMaterialSubtypes('roof', roofMaterialType.value);
+    }
 });
 
 /**
@@ -434,6 +440,7 @@ function calculateRoofMaterials() {
     const roofType = document.getElementById('roofType').value;
     const materialId = document.getElementById('roofSubtype').value;
     const priceId = document.getElementById('roofCoating').value;
+    const useSecondSlope = document.getElementById('useSecondSlope').checked;
 
     if (!materialId || !priceId) {
         alert('Выберите материал и покрытие');
@@ -445,19 +452,19 @@ function calculateRoofMaterials() {
 
     if (!material || !priceOption) return [];
 
-    let length1, width;
+    let length1, width1, length2, width2;
 
     if (roofType === 'single') {
         length1 = parseFloat(document.getElementById('singleRoofLength').value);
-        width = parseFloat(document.getElementById('singleRoofWidth').value);
+        width1 = parseFloat(document.getElementById('singleRoofWidth').value);
 
-        if (!length1 || !width) {
+        if (!length1 || !width1) {
             alert('Заполните размеры ската');
             return [];
         }
 
         // x = (ширина крыши / монтажная ширина материала)
-        const sheetsCount = customRound(width / material.working_width);
+        const sheetsCount = customRound(width1 / material.working_width);
 
         results.push({
             materialId: parseInt(materialId),
@@ -473,27 +480,50 @@ function calculateRoofMaterials() {
             workingWidth: material.working_width
         });
     } else {
-        length1 = parseFloat(document.getElementById('doubleRoofLength').value);
-        width = parseFloat(document.getElementById('doubleRoofWidth').value);
+        length1 = parseFloat(document.getElementById('doubleRoofLength1').value);
+        width1 = parseFloat(document.getElementById('doubleRoofWidth1').value);
 
-        if (!length1 || !width) {
-            alert('Заполните размеры ската');
+        if (!length1 || !width1) {
+            alert('Заполните размеры первого ската');
             return [];
         }
 
-        // x = (ширина крыши / монтажная ширина материала)
-        const sheetsCount = customRound(width / material.working_width);
-
+        // Расчет для первого ската
+        const sheetsCount1 = customRound(width1 / material.working_width);
         results.push({
             materialId: parseInt(materialId),
             priceId: parseInt(priceId),
-            name: `${material.name} (${priceOption.coating}, ${priceOption.thickness} мм)`,
+            name: `${material.name} (${priceOption.coating}, ${priceOption.thickness} мм) - Скат 1`,
             unit: material.unit,
             length: length1,
-            quantity: sheetsCount * 2, // Умножаем на 2 для двух скатов
+            quantity: sheetsCount1,
             pricePerM2: priceOption.price,
             price: priceOption.price * material.overall_width * length1,
-            total: priceOption.price * material.overall_width * length1 * sheetsCount * 2,
+            total: priceOption.price * material.overall_width * length1 * sheetsCount1,
+            overallWidth: material.overall_width,
+            workingWidth: material.working_width
+        });
+
+        // Расчет для второго ската
+        if (useSecondSlope) {
+            length2 = parseFloat(document.getElementById('doubleRoofLength2').value) || length1;
+            width2 = parseFloat(document.getElementById('doubleRoofWidth2').value) || width1;
+        } else {
+            length2 = length1;
+            width2 = width1;
+        }
+
+        const sheetsCount2 = customRound(width2 / material.working_width);
+        results.push({
+            materialId: parseInt(materialId),
+            priceId: parseInt(priceId),
+            name: `${material.name} (${priceOption.coating}, ${priceOption.thickness} мм) - Скат 2`,
+            unit: material.unit,
+            length: length2,
+            quantity: sheetsCount2,
+            pricePerM2: priceOption.price,
+            price: priceOption.price * material.overall_width * length2,
+            total: priceOption.price * material.overall_width * length2 * sheetsCount2,
             overallWidth: material.overall_width,
             workingWidth: material.working_width
         });
@@ -599,7 +629,10 @@ function updateResultsTable() {
                 <input type="number" class="length-input" value="${item.length}" 
                     min="0.1" step="0.1" data-index="${index}">
             </td>
-            <td>${item.quantity}</td>
+            <td>
+                <input type="number" class="quantity-input" value="${item.quantity}" 
+                    min="1" step="1" data-index="${index}">
+            </td>
             <td>
                 <input type="number" class="price-input" value="${item.pricePerM2}" 
                     min="0.01" step="0.01" data-index="${index}">
@@ -611,8 +644,9 @@ function updateResultsTable() {
         totalAmount += item.total;
     });
 
-    // Добавляем обработчики для изменения длины и цены
+    // Добавляем обработчики для изменения длины, количества и цены
     const lengthInputs = tbody.querySelectorAll('.length-input');
+    const quantityInputs = tbody.querySelectorAll('.quantity-input');
     const priceInputs = tbody.querySelectorAll('.price-input');
 
     lengthInputs.forEach(input => {
@@ -625,10 +659,25 @@ function updateResultsTable() {
                 return;
             }
             
-            // Обновляем длину и пересчитываем стоимость
             calculationResults[index].length = length;
             calculationResults[index].price = calculationResults[index].pricePerM2 * calculationResults[index].overallWidth * length;
             calculationResults[index].total = calculationResults[index].price * calculationResults[index].quantity;
+            updateResultsTable();
+        });
+    });
+
+    quantityInputs.forEach(input => {
+        input.addEventListener('change', () => {
+            const index = parseInt(input.getAttribute('data-index'));
+            const quantity = parseInt(input.value);
+            
+            if (quantity <= 0 || isNaN(quantity)) {
+                input.value = calculationResults[index].quantity;
+                return;
+            }
+            
+            calculationResults[index].quantity = quantity;
+            calculationResults[index].total = calculationResults[index].price * quantity;
             updateResultsTable();
         });
     });
@@ -643,7 +692,6 @@ function updateResultsTable() {
                 return;
             }
             
-            // Обновляем цену за м² и пересчитываем стоимость
             calculationResults[index].pricePerM2 = price;
             calculationResults[index].price = price * calculationResults[index].overallWidth * calculationResults[index].length;
             calculationResults[index].total = calculationResults[index].price * calculationResults[index].quantity;
