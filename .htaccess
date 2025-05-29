@@ -23,7 +23,7 @@ Header set Access-Control-Allow-Headers "Content-Type, Authorization"
     
     # Handle API requests
     RewriteCond %{REQUEST_URI} ^/api/
-    RewriteRule ^(.*)$ http://localhost:3000/$1 [P,L]
+    RewriteRule ^(.*)$ http://localhost:3002/$1 [P,L]
     
     # For all other requests, serve index.html
     RewriteRule ^ index.html [L]
