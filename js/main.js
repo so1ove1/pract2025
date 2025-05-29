@@ -17,14 +17,20 @@ async function fetchAPI(endpoint, options = {}) {
     const defaultOptions = {
         headers: {
             'Content-Type': 'application/json',
+            'Accept': 'application/json',
             ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-        }
+        },
+        credentials: 'include'
     };
 
     try {
         const response = await fetch(`${API_URL}${endpoint}`, {
             ...defaultOptions,
-            ...options
+            ...options,
+            headers: {
+                ...defaultOptions.headers,
+                ...(options.headers || {})
+            }
         });
 
         const contentType = response.headers.get('content-type');
@@ -128,13 +134,6 @@ export function formatCurrency(value) {
                 adminCard.style.display = 'none';
             }
         }
-
-        // Validate token on page load
-        fetchAPI('/auth/validate').catch(() => {
-            localStorage.removeItem('token');
-            localStorage.removeItem('currentUser');
-            window.location.href = 'auth.html';
-        });
     } catch (error) {
         console.error('Error processing user data:', error);
         localStorage.removeItem('token');

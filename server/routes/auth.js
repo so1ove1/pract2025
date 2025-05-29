@@ -17,7 +17,7 @@ router.get('/users', async (req, res) => {
         res.json(users);
     } catch (error) {
         console.error('Error fetching users:', error);
-        res.status(500).json({ message: 'Failed to fetch users' });
+        res.status(500).json({ message: 'Ошибка при получении списка пользователей' });
     }
 });
 
@@ -27,19 +27,19 @@ router.post('/login', async (req, res) => {
         const { login, password } = req.body;
         
         if (!login || !password) {
-            return res.status(400).json({ message: 'Login and password are required' });
+            return res.status(400).json({ message: 'Требуется логин и пароль' });
         }
         
         const user = await User.findOne({ where: { login } });
         
         if (!user) {
-            return res.status(401).json({ message: 'Invalid login or password' });
+            return res.status(401).json({ message: 'Неверный логин или пароль' });
         }
         
         const isValidPassword = await bcrypt.compare(password, user.password);
         
         if (!isValidPassword) {
-            return res.status(401).json({ message: 'Invalid login or password' });
+            return res.status(401).json({ message: 'Неверный логин или пароль' });
         }
         
         // Update last login time
@@ -64,7 +64,7 @@ router.post('/login', async (req, res) => {
         });
     } catch (error) {
         console.error('Authentication error:', error);
-        res.status(500).json({ message: 'Authentication failed' });
+        res.status(500).json({ message: 'Ошибка аутентификации' });
     }
 });
 
@@ -87,12 +87,12 @@ router.post('/users', authenticateToken, isAdmin, async (req, res) => {
         const { login, name, password, role } = req.body;
         
         if (!login || !name || !password || !role) {
-            return res.status(400).json({ message: 'All fields are required' });
+            return res.status(400).json({ message: 'Все поля обязательны для заполнения' });
         }
         
         const existingUser = await User.findOne({ where: { login } });
         if (existingUser) {
-            return res.status(400).json({ message: 'User with this login already exists' });
+            return res.status(400).json({ message: 'Пользователь с таким логином уже существует' });
         }
         
         const user = await User.create({ login, name, password, role });
@@ -104,7 +104,7 @@ router.post('/users', authenticateToken, isAdmin, async (req, res) => {
         });
     } catch (error) {
         console.error('Error creating user:', error);
-        res.status(500).json({ message: 'Failed to create user' });
+        res.status(500).json({ message: 'Ошибка при создании пользователя' });
     }
 });
 
