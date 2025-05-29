@@ -5,14 +5,26 @@ import Price from './Price.js';
 import Calculation from './Calculation.js';
 
 // Define relationships
-Category.hasMany(Material);
-Material.belongsTo(Category);
+Category.hasMany(Material, {
+    foreignKey: 'category_id'
+});
+Material.belongsTo(Category, {
+    foreignKey: 'category_id'
+});
 
-Material.hasMany(Price);
-Price.belongsTo(Material);
+Material.hasMany(Price, {
+    foreignKey: 'material_id'
+});
+Price.belongsTo(Material, {
+    foreignKey: 'material_id'
+});
 
-User.hasMany(Calculation);
-Calculation.belongsTo(User);
+User.hasMany(Calculation, {
+    foreignKey: 'user_id'
+});
+Calculation.belongsTo(User, {
+    foreignKey: 'user_id'
+});
 
 export {
     User,

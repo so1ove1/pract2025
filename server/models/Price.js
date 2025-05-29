@@ -7,6 +7,10 @@ const Price = sequelize.define('Price', {
         primaryKey: true,
         autoIncrement: true
     },
+    material_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    },
     coating: {
         type: DataTypes.STRING,
         allowNull: false
@@ -22,7 +26,19 @@ const Price = sequelize.define('Price', {
     date: {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW
+    },
+    created_at: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW
+    },
+    updated_at: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW
     }
+}, {
+    timestamps: true,
+    createdAt: 'created_at',
+    updatedAt: 'updated_at'
 });
 
 export default Price;

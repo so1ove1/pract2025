@@ -19,14 +19,30 @@ const Material = sequelize.define('Material', {
         type: DataTypes.STRING,
         allowNull: false
     },
-    overallWidth: {
+    category_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    },
+    overall_width: {
         type: DataTypes.DECIMAL(10, 2),
         allowNull: true
     },
-    workingWidth: {
+    working_width: {
         type: DataTypes.DECIMAL(10, 2),
         allowNull: true
+    },
+    created_at: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW
+    },
+    updated_at: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW
     }
+}, {
+    timestamps: true,
+    createdAt: 'created_at',
+    updatedAt: 'updated_at'
 });
 
 export default Material;
