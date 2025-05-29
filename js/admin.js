@@ -4,6 +4,7 @@
 
 import { api, formatDate, formatCurrency } from './main.js';
 
+// Глобальные переменные
 let categories = []; // Для хранения категорий
 let materials = []; // Для хранения материалов
 let pricelist = []; // Для хранения прайс-листа
@@ -23,10 +24,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupAdminTabs();
     
     // Загрузка данных
-    await loadCategories();
-    await loadMaterials();
-    await loadPricelist();
-    await loadUsers();
+    await Promise.all([
+        loadCategories(),
+        loadMaterials(),
+        loadPricelist(),
+        loadUsers()
+    ]).catch(error => {
+        console.error('Ошибка при загрузке данных:', error);
+    });
     
     // Инициализация модальных окон
     setupModals();
@@ -52,13 +57,21 @@ function setupAdminTabs() {
     const tabs = document.querySelectorAll('.admin-tabs .tab-btn');
     const panes = document.querySelectorAll('.tab-pane');
     
+    if (!tabs.length || !panes.length) {
+        console.warn('Элементы вкладок не найдены');
+        return;
+    }
+    
     tabs.forEach(tab => {
         tab.addEventListener('click', () => {
             tabs.forEach(t => t.classList.remove('active'));
             panes.forEach(p => p.classList.remove('active'));
             
             tab.classList.add('active');
-            document.getElementById(tab.getAttribute('data-tab')).classList.add('active');
+            const targetPane = document.getElementById(tab.getAttribute('data-tab') + 'Tab');
+            if (targetPane) {
+                targetPane.classList.add('active');
+            }
         });
     });
 }
@@ -71,7 +84,10 @@ async function loadCategories() {
         categories = await api.categories.getAll();
         const categoriesList = document.getElementById('categoriesList');
         
-        if (!categoriesList) return;
+        if (!categoriesList) {
+            console.warn('Элемент списка категорий не найден');
+            return;
+        }
         
         // Очищаем список
         categoriesList.innerHTML = '';
@@ -89,38 +105,38 @@ async function loadCategories() {
             const item = document.createElement('li');
             item.innerHTML = `
                 ${category.name}
-                
-                    
-                        
-                    
-                    
-                        
-                    
-                
+                <div class="category-actions">
+                    <button class="btn-icon edit-category" title="Редактировать">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-icon delete-category" title="Удалить">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
             `;
             
             item.setAttribute('data-category-id', category.id);
             item.addEventListener('click', () => selectCategory(category.id));
             
-            // Обработчики для кнопок редактирования и удаления
             const editBtn = item.querySelector('.edit-category');
             const deleteBtn = item.querySelector('.delete-category');
             
-            editBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                editCategory(category.id);
-            });
-            
-            deleteBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                deleteCategory(category.id);
-            });
+            if (editBtn && deleteBtn) {
+                editBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    editCategory(category.id);
+                });
+                
+                deleteBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    deleteCategory(category.id);
+                });
+            }
             
             categoriesList.appendChild(item);
         });
     } catch (error) {
         console.error('Ошибка при загрузке категорий:', error);
-        alert('Не удалось загрузить категории');
     }
 }
 
@@ -133,18 +149,19 @@ async function loadMaterials(categoryId = null) {
         materials = await api.materials.getAll(params);
         
         const materialsTableBody = document.getElementById('materialsTableBody');
-        if (!materialsTableBody) return;
+        if (!materialsTableBody) {
+            console.warn('Элемент таблицы материалов не найден');
+            return;
+        }
         
         // Очищаем таблицу
         materialsTableBody.innerHTML = '';
         
         // Если нет материалов
         if (materials.length === 0) {
-            const emptyRow = document.createElement('tr');
-            emptyRow.innerHTML = `
-                	Нет материалов
+            materialsTableBody.innerHTML = `
+                <tr><td colspan="5" class="text-center">Нет материалов</td></tr>
             `;
-            materialsTableBody.appendChild(emptyRow);
             return;
         }
         
@@ -154,28 +171,32 @@ async function loadMaterials(categoryId = null) {
             
             const row = document.createElement('tr');
             row.innerHTML = `
-                	${material.name}	${material.code}	${material.unit}	${category ? category.name : 'Не указано'}	
-                    
-                        
-                    
+                <td>${material.name}</td>
+                <td>${material.code}</td>
+                <td>${material.unit}</td>
+                <td>${category ? category.name : 'Не указано'}</td>
+                <td class="actions-cell">
+                    <button class="btn btn-sm btn-primary edit-material" data-id="${material.id}">
+                        <i class="fas fa-edit"></i>
+                    </button>
                     <button class="btn btn-sm btn-danger delete-material" data-id="${material.id}">
                         <i class="fas fa-trash"></i>
                     </button>
-                
+                </td>
             `;
             
-            // Обработчики для кнопок редактирования и удаления
             const editBtn = row.querySelector('.edit-material');
             const deleteBtn = row.querySelector('.delete-material');
             
-            editBtn.addEventListener('click', () => editMaterial(material.id));
-            deleteBtn.addEventListener('click', () => deleteMaterial(material.id));
+            if (editBtn && deleteBtn) {
+                editBtn.addEventListener('click', () => editMaterial(material.id));
+                deleteBtn.addEventListener('click', () => deleteMaterial(material.id));
+            }
             
             materialsTableBody.appendChild(row);
         });
     } catch (error) {
         console.error('Ошибка при загрузке материалов:', error);
-        alert('Не удалось загрузить материалы');
     }
 }
 
@@ -187,18 +208,19 @@ async function loadPricelist() {
         pricelist = await api.prices.getAll();
         const pricelistTableBody = document.getElementById('pricelistTableBody');
         
-        if (!pricelistTableBody) return;
+        if (!pricelistTableBody) {
+            console.warn('Элемент таблицы прайс-листа не найден');
+            return;
+        }
         
         // Очищаем таблицу
         pricelistTableBody.innerHTML = '';
         
         // Если нет позиций
         if (pricelist.length === 0) {
-            const emptyRow = document.createElement('tr');
-            emptyRow.innerHTML = `
-                	Прайс-лист пуст
+            pricelistTableBody.innerHTML = `
+                <tr><td colspan="7" class="text-center">Прайс-лист пуст</td></tr>
             `;
-            pricelistTableBody.appendChild(emptyRow);
             return;
         }
         
@@ -206,28 +228,34 @@ async function loadPricelist() {
         pricelist.forEach(item => {
             const row = document.createElement('tr');
             row.innerHTML = `
-                	${item.categoryName}	${item.materialName}	${item.coating}	${item.thickness}	${formatCurrency(item.price)} ₽	${formatDate(item.date)}	
-                    
-                        
-                    
+                <td>${item.categoryName}</td>
+                <td>${item.materialName}</td>
+                <td>${item.coating}</td>
+                <td>${item.thickness}</td>
+                <td>${formatCurrency(item.price)} ₽</td>
+                <td>${formatDate(item.date)}</td>
+                <td class="actions-cell">
+                    <button class="btn btn-sm btn-primary edit-price" data-id="${item.id}">
+                        <i class="fas fa-edit"></i>
+                    </button>
                     <button class="btn btn-sm btn-danger delete-price" data-id="${item.id}">
                         <i class="fas fa-trash"></i>
                     </button>
-                
+                </td>
             `;
             
-            // Обработчики для кнопок редактирования и удаления
             const editBtn = row.querySelector('.edit-price');
             const deleteBtn = row.querySelector('.delete-price');
             
-            editBtn.addEventListener('click', () => editPrice(item.id));
-            deleteBtn.addEventListener('click', () => deletePrice(item.id));
+            if (editBtn && deleteBtn) {
+                editBtn.addEventListener('click', () => editPrice(item.id));
+                deleteBtn.addEventListener('click', () => deletePrice(item.id));
+            }
             
             pricelistTableBody.appendChild(row);
         });
     } catch (error) {
         console.error('Ошибка при загрузке прайс-листа:', error);
-        alert('Не удалось загрузить прайс-лист');
     }
 }
 
@@ -239,18 +267,19 @@ async function loadUsers() {
         users = await api.auth.getUsers();
         const usersTableBody = document.getElementById('usersTableBody');
         
-        if (!usersTableBody) return;
+        if (!usersTableBody) {
+            console.warn('Элемент таблицы пользователей не найден');
+            return;
+        }
         
         // Очищаем таблицу
         usersTableBody.innerHTML = '';
         
         // Если нет пользователей
         if (users.length === 0) {
-            const emptyRow = document.createElement('tr');
-            emptyRow.innerHTML = `
-                	Нет пользователей
+            usersTableBody.innerHTML = `
+                <tr><td colspan="5" class="text-center">Нет пользователей</td></tr>
             `;
-            usersTableBody.appendChild(emptyRow);
             return;
         }
         
@@ -258,28 +287,32 @@ async function loadUsers() {
         users.forEach(user => {
             const row = document.createElement('tr');
             row.innerHTML = `
-                	${user.login}	${user.name}	${user.role === 'admin' ? 'Администратор' : 'Пользователь'}	${user.lastLogin ? formatDate(user.lastLogin) : 'Нет данных'}	
-                    
-                        
-                    
+                <td>${user.login}</td>
+                <td>${user.name}</td>
+                <td>${user.role === 'admin' ? 'Администратор' : 'Пользователь'}</td>
+                <td>${user.last_login ? formatDate(user.last_login) : 'Нет данных'}</td>
+                <td class="actions-cell">
+                    <button class="btn btn-sm btn-primary edit-user" data-id="${user.id}">
+                        <i class="fas fa-edit"></i>
+                    </button>
                     <button class="btn btn-sm btn-danger delete-user" data-id="${user.id}">
                         <i class="fas fa-trash"></i>
                     </button>
-                
+                </td>
             `;
             
-            // Обработчики для кнопок редактирования и удаления
             const editBtn = row.querySelector('.edit-user');
             const deleteBtn = row.querySelector('.delete-user');
             
-            editBtn.addEventListener('click', () => editUser(user.id));
-            deleteBtn.addEventListener('click', () => deleteUser(user.id));
+            if (editBtn && deleteBtn) {
+                editBtn.addEventListener('click', () => editUser(user.id));
+                deleteBtn.addEventListener('click', () => deleteUser(user.id));
+            }
             
             usersTableBody.appendChild(row);
         });
     } catch (error) {
         console.error('Ошибка при загрузке пользователей:', error);
-        alert('Не удалось загрузить пользователей');
     }
 }
 
@@ -287,12 +320,12 @@ async function loadUsers() {
  * Настройка модальных окон
  */
 function setupModals() {
-    const addUserModal = document.getElementById('addUserModal');
-    const addUserForm = document.getElementById('addUserForm');
+    const addUserModal = document.getElementById('userModal');
+    const addUserForm = document.getElementById('userForm');
     const closeUserModalBtn = document.getElementById('closeUserModalBtn');
     const cancelUserBtn = document.getElementById('cancelUserBtn');
     
-    if (addUserModal && addUserForm) {
+    if (addUserModal && addUserForm && closeUserModalBtn && cancelUserBtn) {
         addUserForm.addEventListener('submit', async (event) => {
             event.preventDefault();
             
@@ -303,10 +336,8 @@ function setupModals() {
             
             try {
                 if (currentUserId) {
-                    // Обновление пользователя (не реализовано в текущем API)
                     alert('Обновление пользователя не поддерживается в текущей версии');
                 } else {
-                    // Создание нового пользователя
                     await api.auth.createUser({ login, name, password, role });
                     alert('Пользователь успешно создан');
                     await loadUsers();
@@ -340,7 +371,7 @@ function setupButtons() {
     const addUserBtn = document.getElementById('addUserBtn');
     if (addUserBtn) {
         addUserBtn.addEventListener('click', () => {
-            const addUserModal = document.getElementById('addUserModal');
+            const addUserModal = document.getElementById('userModal');
             if (addUserModal) {
                 addUserModal.style.display = 'block';
             }
@@ -367,7 +398,6 @@ function selectCategory(categoryId) {
  * Редактирование категории
  */
 function editCategory(id) {
-    // Реализация редактирования категории
     alert('Редактирование категории не реализовано');
 }
 
@@ -392,7 +422,6 @@ async function deleteCategory(id) {
  * Редактирование материала
  */
 function editMaterial(id) {
-    // Реализация редактирования материала
     alert('Редактирование материала не реализовано');
 }
 
@@ -416,7 +445,6 @@ async function deleteMaterial(id) {
  * Редактирование цены
  */
 function editPrice(id) {
-    // Реализация редактирования цены
     alert('Редактирование цены не реализовано');
 }
 
@@ -440,7 +468,6 @@ async function deletePrice(id) {
  * Редактирование пользователя
  */
 function editUser(id) {
-    // Реализация редактирования пользователя
     alert('Редактирование пользователя не реализовано');
 }
 
