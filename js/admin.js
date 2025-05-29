@@ -104,7 +104,7 @@ async function loadCategories() {
         categories.forEach(category => {
             const item = document.createElement('li');
             item.innerHTML = `
-                ${category.name}
+                <span class="category-name">${category.name}</span>
                 <div class="category-actions">
                     <button class="btn-icon edit-category" title="Редактировать">
                         <i class="fas fa-edit"></i>
@@ -116,17 +116,25 @@ async function loadCategories() {
             `;
             
             item.setAttribute('data-category-id', category.id);
-            item.addEventListener('click', () => selectCategory(category.id));
             
+            // Добавляем обработчик клика на весь элемент
+            const categoryName = item.querySelector('.category-name');
+            if (categoryName) {
+                categoryName.addEventListener('click', () => selectCategory(category.id));
+            }
+            
+            // Добавляем обработчики для кнопок
             const editBtn = item.querySelector('.edit-category');
             const deleteBtn = item.querySelector('.delete-category');
             
-            if (editBtn && deleteBtn) {
+            if (editBtn) {
                 editBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
                     editCategory(category.id);
                 });
-                
+            }
+            
+            if (deleteBtn) {
                 deleteBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
                     deleteCategory(category.id);
@@ -176,20 +184,24 @@ async function loadMaterials(categoryId = null) {
                 <td>${material.unit}</td>
                 <td>${category ? category.name : 'Не указано'}</td>
                 <td class="actions-cell">
-                    <button class="btn btn-sm btn-primary edit-material" data-id="${material.id}">
+                    <button class="btn btn-sm btn-primary edit-material" title="Редактировать">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button class="btn btn-sm btn-danger delete-material" data-id="${material.id}">
+                    <button class="btn btn-sm btn-danger delete-material" title="Удалить">
                         <i class="fas fa-trash"></i>
                     </button>
                 </td>
             `;
             
+            // Добавляем обработчики для кнопок
             const editBtn = row.querySelector('.edit-material');
             const deleteBtn = row.querySelector('.delete-material');
             
-            if (editBtn && deleteBtn) {
+            if (editBtn) {
                 editBtn.addEventListener('click', () => editMaterial(material.id));
+            }
+            
+            if (deleteBtn) {
                 deleteBtn.addEventListener('click', () => deleteMaterial(material.id));
             }
             
@@ -235,20 +247,24 @@ async function loadPricelist() {
                 <td>${formatCurrency(item.price)} ₽</td>
                 <td>${formatDate(item.date)}</td>
                 <td class="actions-cell">
-                    <button class="btn btn-sm btn-primary edit-price" data-id="${item.id}">
+                    <button class="btn btn-sm btn-primary edit-price" title="Редактировать">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button class="btn btn-sm btn-danger delete-price" data-id="${item.id}">
+                    <button class="btn btn-sm btn-danger delete-price" title="Удалить">
                         <i class="fas fa-trash"></i>
                     </button>
                 </td>
             `;
             
+            // Добавляем обработчики для кнопок
             const editBtn = row.querySelector('.edit-price');
             const deleteBtn = row.querySelector('.delete-price');
             
-            if (editBtn && deleteBtn) {
+            if (editBtn) {
                 editBtn.addEventListener('click', () => editPrice(item.id));
+            }
+            
+            if (deleteBtn) {
                 deleteBtn.addEventListener('click', () => deletePrice(item.id));
             }
             
@@ -292,20 +308,24 @@ async function loadUsers() {
                 <td>${user.role === 'admin' ? 'Администратор' : 'Пользователь'}</td>
                 <td>${user.last_login ? formatDate(user.last_login) : 'Нет данных'}</td>
                 <td class="actions-cell">
-                    <button class="btn btn-sm btn-primary edit-user" data-id="${user.id}">
+                    <button class="btn btn-sm btn-primary edit-user" title="Редактировать">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button class="btn btn-sm btn-danger delete-user" data-id="${user.id}">
+                    <button class="btn btn-sm btn-danger delete-user" title="Удалить">
                         <i class="fas fa-trash"></i>
                     </button>
                 </td>
             `;
             
+            // Добавляем обработчики для кнопок
             const editBtn = row.querySelector('.edit-user');
             const deleteBtn = row.querySelector('.delete-user');
             
-            if (editBtn && deleteBtn) {
+            if (editBtn) {
                 editBtn.addEventListener('click', () => editUser(user.id));
+            }
+            
+            if (deleteBtn) {
                 deleteBtn.addEventListener('click', () => deleteUser(user.id));
             }
             
