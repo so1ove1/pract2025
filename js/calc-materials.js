@@ -208,14 +208,34 @@ async function loadMaterialsData() {
  * Инициализация обработчиков изменения типа материала
  */
 function initMaterialTypeHandlers() {
-    const materialSelects = ['proflistType', 'stakeType', 'roofSubtype', 'sidingSubtype'];
-    
-    materialSelects.forEach(selectId => {
+    // Обработчики для изменения типа материала
+    const materialTypeSelects = {
+        'roofMaterialType': 'roof',
+        'sidingMaterialType': 'siding'
+    };
+
+    Object.entries(materialTypeSelects).forEach(([selectId, section]) => {
+        const select = document.getElementById(selectId);
+        if (select) {
+            select.addEventListener('change', (e) => {
+                updateMaterialSubtypes(section, e.target.value);
+            });
+        }
+    });
+
+    // Обработчики для изменения подтипа материала
+    const subtypeSelects = {
+        'proflistType': 'proflist',
+        'stakeType': 'stake',
+        'roofSubtype': 'roof',
+        'sidingSubtype': 'siding'
+    };
+
+    Object.entries(subtypeSelects).forEach(([selectId, section]) => {
         const select = document.getElementById(selectId);
         if (select) {
             select.addEventListener('change', () => {
-                const type = selectId.replace('Type', '').replace('Subtype', '');
-                updateCoatingOptions(type);
+                updateCoatingOptions(section);
             });
         }
     });
@@ -224,31 +244,47 @@ function initMaterialTypeHandlers() {
 /**
  * Обновление опций покрытия
  */
-function updateCoatingOptions(materialType) {
-    const coatingSelect = document.getElementById(`${materialType}Coating`);
-    if (!coatingSelect) return;
+function updateCoatingOptions(section) {
+    const materialSelect = document.getElementById(`${section}Type`) || 
+                         document.getElementById(`${section}Subtype`);
+    const coatingSelect = document.getElementById(`${section}Coating`);
     
-    const materialSelect = document.getElementById(`${materialType}Type`) || 
-                         document.getElementById(`${materialType}Subtype`);
-    if (!materialSelect) return;
+    if (!materialSelect || !coatingSelect) return;
     
     const materialId = materialSelect.value;
     if (!materialId) return;
-    
+
+    // Находим материал
+    const material = materialsData.find(m => m.id === parseInt(materialId));
+    if (!material) return;
+
     // Находим все цены для выбранного материала
-    const prices = priceListData.filter(p => p.materialId === materialId);
+    const prices = priceListData.filter(p => p.materialId === parseInt(materialId));
     
     // Создаем уникальные комбинации покрытия и толщины
     const options = prices.map(p => ({
+        id: p.id,
         coating: p.coating,
         thickness: p.thickness,
-        price: p.price
+        price: p.price,
+        text: `${p.coating}, ${p.thickness} мм - ${formatCurrency(p.price)} ₽/${material.unit}`
     }));
+
+    // Сортируем опции
+    options.sort((a, b) => {
+        if (a.coating === b.coating) {
+            return a.thickness - b.thickness;
+        }
+        return a.coating.localeCompare(b.coating);
+    });
     
     // Обновляем список покрытий
     coatingSelect.innerHTML = options.map(option => 
-        `<option value="${option.coating}" data-thickness="${option.thickness}" data-price="${option.price}">
-            ${option.coating}, ${option.thickness} мм - ${formatCurrency(option.price)} ₽/м²
+        `<option value="${option.id}" 
+            data-coating="${option.coating}"
+            data-thickness="${option.thickness}"
+            data-price="${option.price}">
+            ${option.text}
         </option>`
     ).join('');
 }
@@ -308,9 +344,6 @@ function calculateMaterials() {
     calculationResults = results;
     updateResultsTable();
 }
-
-// Остальные функции (calculateFenceMaterials, calculateRoofMaterials, calculateSidingMaterials)
-// остаются без изменений, так как они не связаны с проблемой покрытий и толщин
 
 /**
  * Обновление таблицы результатов
@@ -402,5 +435,70 @@ async function saveCalculation() {
  * Печать расчета
  */
 function printCalculation() {
-    // Реализация функции печати остается без изменений
+    if (calculationResults.length === 0) {
+        alert('Нет данных для печати');
+        return;
+    }
+    
+    const calculationName = document.getElementById('calculationMaterialName').value || 'Расчет материалов';
+    const totalAmount = calculationResults.reduce((sum, item) => sum + item.total, 0);
+    
+    const printContent = `
+        <html>
+        <head>
+            <title>${calculationName}</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                h1 { color: #2B5DA2; }
+                table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+                th { background-color: #f2f2f2; }
+                .total { font-weight: bold; }
+            </style>
+        </head>
+        <body>
+            <h1>${calculationName}</h1>
+            <table>
+                <thead>
+                    <tr>
+                        <th>№</th>
+                        <th>Материал</th>
+                        <th>Ед. изм.</th>
+                        <th>Длина, м</th>
+                        <th>Количество</th>
+                        <th>Цена, ₽</th>
+                        <th>Сумма, ₽</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${calculationResults.map((item, index) => `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${item.name}</td>
+                            <td>${item.unit}</td>
+                            <td>${item.length || '-'}</td>
+                            <td>${item.quantity}</td>
+                            <td>${formatCurrency(item.price)}</td>
+                            <td>${formatCurrency(item.total)}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="6" class="total">Итого:</td>
+                        <td class="total">${formatCurrency(totalAmount)} ₽</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </body>
+        </html>
+    `;
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    
+    setTimeout(() => {
+        printWindow.print();
+    }, 500);
 }
