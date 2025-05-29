@@ -17,16 +17,16 @@ const app = express();
 app.use(cors({
     origin: process.env.NODE_ENV === 'production' 
         ? 'https://manager.bratskprofil.ru' 
-        : ['http://localhost:3000', 'http://localhost:5173'],
+        : ['http://localhost:3000', 'http://127.0.0.1:5173', 'http://localhost:5173'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
     credentials: true
 }));
 
 app.use(express.json());
 
-// Set JSON content type for all responses
-app.use((req, res, next) => {
+// Set JSON content type for all API responses
+app.use('/api', (req, res, next) => {
     res.setHeader('Content-Type', 'application/json');
     next();
 });

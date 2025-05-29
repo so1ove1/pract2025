@@ -3,7 +3,7 @@
  */
 
 // Base API URL
-const API_URL = 'http://localhost:3001/api';
+const API_URL = 'http://127.0.0.1:3001/api';
 
 /**
  * Send request to API
@@ -19,8 +19,7 @@ async function fetchAPI(endpoint, options = {}) {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
             ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-        },
-        credentials: 'include'
+        }
     };
 
     try {
@@ -34,8 +33,11 @@ async function fetchAPI(endpoint, options = {}) {
         });
 
         const contentType = response.headers.get('content-type');
-        const isJson = contentType && contentType.includes('application/json');
-        const data = isJson ? await response.json() : null;
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('Неверный формат ответа от сервера');
+        }
+
+        const data = await response.json();
 
         if (!response.ok) {
             if (response.status === 401) {
@@ -46,7 +48,7 @@ async function fetchAPI(endpoint, options = {}) {
                 }
                 throw new Error('Сессия истекла. Пожалуйста, войдите снова.');
             }
-            throw new Error(data?.message || 'Ошибка сервера');
+            throw new Error(data.message || 'Ошибка сервера');
         }
 
         return data;
