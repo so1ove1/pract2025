@@ -13,16 +13,18 @@ async function initAuthForm() {
     // Check if user is already logged in
     const token = localStorage.getItem('token');
     if (token) {
-        window.location.href = 'index.html';
-        return;
+        try {
+            await api.auth.validate();
+            window.location.href = 'index.html';
+            return;
+        } catch (error) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('currentUser');
+        }
     }
     
     try {
-        const response = await fetch('http://localhost:3001/api/auth/users');
-        if (!response.ok) {
-            throw new Error('Failed to fetch users');
-        }
-        const users = await response.json();
+        const users = await api.auth.getUsers();
         
         users.forEach(user => {
             const option = document.createElement('option');
@@ -49,19 +51,7 @@ async function initAuthForm() {
         authError.textContent = '';
         
         try {
-            const response = await fetch('http://localhost:3001/api/auth/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ login, password })
-            });
-            
-            const data = await response.json();
-            
-            if (!response.ok) {
-                throw new Error(data.message || 'Authentication failed');
-            }
+            const data = await api.auth.login({ login, password });
             
             localStorage.setItem('token', data.token);
             localStorage.setItem('currentUser', JSON.stringify(data.user));

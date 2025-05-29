@@ -36,6 +36,34 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 /**
+ * Проверка прав администратора
+ */
+function checkAdminAccess() {
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    if (!currentUser || currentUser.role !== 'admin') {
+        window.location.href = 'index.html';
+    }
+}
+
+/**
+ * Настройка вкладок
+ */
+function setupAdminTabs() {
+    const tabs = document.querySelectorAll('.admin-tabs .tab-btn');
+    const panes = document.querySelectorAll('.tab-pane');
+    
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            tabs.forEach(t => t.classList.remove('active'));
+            panes.forEach(p => p.classList.remove('active'));
+            
+            tab.classList.add('active');
+            document.getElementById(tab.getAttribute('data-tab')).classList.add('active');
+        });
+    });
+}
+
+/**
  * Загрузка категорий
  */
 async function loadCategories() {
@@ -61,14 +89,14 @@ async function loadCategories() {
             const item = document.createElement('li');
             item.innerHTML = `
                 ${category.name}
-                <div class="category-actions">
-                    <button class="btn-icon edit-category" data-id="${category.id}">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn-icon delete-category" data-id="${category.id}">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
-                </div>
+                
+                    
+                        
+                    
+                    
+                        
+                    
+                
             `;
             
             item.setAttribute('data-category-id', category.id);
@@ -92,6 +120,7 @@ async function loadCategories() {
         });
     } catch (error) {
         console.error('Ошибка при загрузке категорий:', error);
+        alert('Не удалось загрузить категории');
     }
 }
 
@@ -113,7 +142,7 @@ async function loadMaterials(categoryId = null) {
         if (materials.length === 0) {
             const emptyRow = document.createElement('tr');
             emptyRow.innerHTML = `
-                <td colspan="5" class="text-center">Нет материалов</td>
+                	Нет материалов
             `;
             materialsTableBody.appendChild(emptyRow);
             return;
@@ -125,18 +154,14 @@ async function loadMaterials(categoryId = null) {
             
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td>${material.name}</td>
-                <td>${material.code}</td>
-                <td>${material.unit}</td>
-                <td>${category ? category.name : 'Не указано'}</td>
-                <td class="actions-cell">
-                    <button class="btn btn-sm btn-primary edit-material" data-id="${material.id}">
-                        <i class="fas fa-edit"></i>
-                    </button>
+                	${material.name}	${material.code}	${material.unit}	${category ? category.name : 'Не указано'}	
+                    
+                        
+                    
                     <button class="btn btn-sm btn-danger delete-material" data-id="${material.id}">
-                        <i class="fas fa-trash-alt"></i>
+                        <i class="fas fa-trash"></i>
                     </button>
-                </td>
+                
             `;
             
             // Обработчики для кнопок редактирования и удаления
@@ -150,6 +175,7 @@ async function loadMaterials(categoryId = null) {
         });
     } catch (error) {
         console.error('Ошибка при загрузке материалов:', error);
+        alert('Не удалось загрузить материалы');
     }
 }
 
@@ -170,7 +196,7 @@ async function loadPricelist() {
         if (pricelist.length === 0) {
             const emptyRow = document.createElement('tr');
             emptyRow.innerHTML = `
-                <td colspan="7" class="text-center">Прайс-лист пуст</td>
+                	Прайс-лист пуст
             `;
             pricelistTableBody.appendChild(emptyRow);
             return;
@@ -180,20 +206,14 @@ async function loadPricelist() {
         pricelist.forEach(item => {
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td>${item.categoryName}</td>
-                <td>${item.materialName}</td>
-                <td>${item.coating}</td>
-                <td>${item.thickness}</td>
-                <td>${formatCurrency(item.price)} ₽</td>
-                <td>${formatDate(item.date)}</td>
-                <td class="actions-cell">
-                    <button class="btn btn-sm btn-primary edit-price" data-id="${item.id}">
-                        <i class="fas fa-edit"></i>
-                    </button>
+                	${item.categoryName}	${item.materialName}	${item.coating}	${item.thickness}	${formatCurrency(item.price)} ₽	${formatDate(item.date)}	
+                    
+                        
+                    
                     <button class="btn btn-sm btn-danger delete-price" data-id="${item.id}">
-                        <i class="fas fa-trash-alt"></i>
+                        <i class="fas fa-trash"></i>
                     </button>
-                </td>
+                
             `;
             
             // Обработчики для кнопок редактирования и удаления
@@ -207,6 +227,7 @@ async function loadPricelist() {
         });
     } catch (error) {
         console.error('Ошибка при загрузке прайс-листа:', error);
+        alert('Не удалось загрузить прайс-лист');
     }
 }
 
@@ -227,7 +248,7 @@ async function loadUsers() {
         if (users.length === 0) {
             const emptyRow = document.createElement('tr');
             emptyRow.innerHTML = `
-                <td colspan="5" class="text-center">Нет пользователей</td>
+                	Нет пользователей
             `;
             usersTableBody.appendChild(emptyRow);
             return;
@@ -237,18 +258,14 @@ async function loadUsers() {
         users.forEach(user => {
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td>${user.login}</td>
-                <td>${user.name}</td>
-                <td>${user.role === 'admin' ? 'Администратор' : 'Пользователь'}</td>
-                <td>${user.lastLogin ? formatDate(user.lastLogin) : 'Нет данных'}</td>
-                <td class="actions-cell">
-                    <button class="btn btn-sm btn-primary edit-user" data-id="${user.id}">
-                        <i class="fas fa-edit"></i>
-                    </button>
+                	${user.login}	${user.name}	${user.role === 'admin' ? 'Администратор' : 'Пользователь'}	${user.lastLogin ? formatDate(user.lastLogin) : 'Нет данных'}	
+                    
+                        
+                    
                     <button class="btn btn-sm btn-danger delete-user" data-id="${user.id}">
-                        <i class="fas fa-trash-alt"></i>
+                        <i class="fas fa-trash"></i>
                     </button>
-                </td>
+                
             `;
             
             // Обработчики для кнопок редактирования и удаления
@@ -262,7 +279,183 @@ async function loadUsers() {
         });
     } catch (error) {
         console.error('Ошибка при загрузке пользователей:', error);
+        alert('Не удалось загрузить пользователей');
     }
 }
 
-// ... (остальные функции остаются без изменений, просто меняем прямые манипуляции с данными на вызовы API)
+/**
+ * Настройка модальных окон
+ */
+function setupModals() {
+    const addUserModal = document.getElementById('addUserModal');
+    const addUserForm = document.getElementById('addUserForm');
+    const closeUserModalBtn = document.getElementById('closeUserModalBtn');
+    const cancelUserBtn = document.getElementById('cancelUserBtn');
+    
+    if (addUserModal && addUserForm) {
+        addUserForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            
+            const login = document.getElementById('userLogin').value;
+            const name = document.getElementById('userName').value;
+            const password = document.getElementById('userPassword').value;
+            const role = document.getElementById('userRole').value;
+            
+            try {
+                if (currentUserId) {
+                    // Обновление пользователя (не реализовано в текущем API)
+                    alert('Обновление пользователя не поддерживается в текущей версии');
+                } else {
+                    // Создание нового пользователя
+                    await api.auth.createUser({ login, name, password, role });
+                    alert('Пользователь успешно создан');
+                    await loadUsers();
+                    addUserModal.style.display = 'none';
+                    addUserForm.reset();
+                }
+            } catch (error) {
+                console.error('Ошибка при сохранении пользователя:', error);
+                alert(error.message || 'Ошибка при сохранении пользователя');
+            }
+        });
+        
+        closeUserModalBtn.addEventListener('click', () => {
+            addUserModal.style.display = 'none';
+            addUserForm.reset();
+            currentUserId = null;
+        });
+        
+        cancelUserBtn.addEventListener('click', () => {
+            addUserModal.style.display = 'none';
+            addUserForm.reset();
+            currentUserId = null;
+        });
+    }
+}
+
+/**
+ * Настройка кнопок
+ */
+function setupButtons() {
+    const addUserBtn = document.getElementById('addUserBtn');
+    if (addUserBtn) {
+        addUserBtn.addEventListener('click', () => {
+            const addUserModal = document.getElementById('addUserModal');
+            if (addUserModal) {
+                addUserModal.style.display = 'block';
+            }
+        });
+    }
+}
+
+/**
+ * Выбор категории
+ */
+function selectCategory(categoryId) {
+    const items = document.querySelectorAll('#categoriesList li');
+    items.forEach(item => item.classList.remove('active'));
+    
+    const selectedItem = document.querySelector(`#categoriesList li[data-category-id="${categoryId}"]`);
+    if (selectedItem) {
+        selectedItem.classList.add('active');
+    }
+    
+    loadMaterials(categoryId);
+}
+
+/**
+ * Редактирование категории
+ */
+function editCategory(id) {
+    // Реализация редактирования категории
+    alert('Редактирование категории не реализовано');
+}
+
+/**
+ * Удаление категории
+ */
+async function deleteCategory(id) {
+    if (confirm('Вы уверены, что хотите удалить эту категорию?')) {
+        try {
+            await api.categories.delete(id);
+            await loadCategories();
+            await loadMaterials();
+            alert('Категория удалена');
+        } catch (error) {
+            console.error('Ошибка при удалении категории:', error);
+            alert(error.message || 'Ошибка при удалении категории');
+        }
+    }
+}
+
+/**
+ * Редактирование материала
+ */
+function editMaterial(id) {
+    // Реализация редактирования материала
+    alert('Редактирование материала не реализовано');
+}
+
+/**
+ * Удаление материала
+ */
+async function deleteMaterial(id) {
+    if (confirm('Вы уверены, что хотите удалить этот материал?')) {
+        try {
+            await api.materials.delete(id);
+            await loadMaterials();
+            alert('Материал удален');
+        } catch (error) {
+            console.error('Ошибка при удалении материала:', error);
+            alert(error.message || 'Ошибка при удалении материала');
+        }
+    }
+}
+
+/**
+ * Редактирование цены
+ */
+function editPrice(id) {
+    // Реализация редактирования цены
+    alert('Редактирование цены не реализовано');
+}
+
+/**
+ * Удаление цены
+ */
+async function deletePrice(id) {
+    if (confirm('Вы уверены, что хотите удалить эту позицию прайс-листа?')) {
+        try {
+            await api.prices.delete(id);
+            await loadPricelist();
+            alert('Позиция прайс-листа удалена');
+        } catch (error) {
+            console.error('Ошибка при удалении позиции:', error);
+            alert(error.message || 'Ошибка при удалении позиции');
+        }
+    }
+}
+
+/**
+ * Редактирование пользователя
+ */
+function editUser(id) {
+    // Реализация редактирования пользователя
+    alert('Редактирование пользователя не реализовано');
+}
+
+/**
+ * Удаление пользователя
+ */
+async function deleteUser(id) {
+    if (confirm('Вы уверены, что хотите удалить этого пользователя?')) {
+        try {
+            await api.auth.deleteUser(id);
+            await loadUsers();
+            alert('Пользователь удален');
+        } catch (error) {
+            console.error('Ошибка при удалении пользователя:', error);
+            alert(error.message || 'Ошибка при удалении пользователя');
+        }
+    }
+}

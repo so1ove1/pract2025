@@ -7,10 +7,10 @@ export const authenticateToken = async (req, res, next) => {
         const token = authHeader && authHeader.split(' ')[1];
         
         if (!token) {
-            return res.status(401).json({ message: 'Authentication required' });
+            return res.status(401).json({ message: 'No token provided' });
         }
         
-        const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY || 'your-secret-key');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
         const user = await User.findByPk(decoded.id);
         
         if (!user) {
@@ -20,13 +20,20 @@ export const authenticateToken = async (req, res, next) => {
         req.user = user;
         next();
     } catch (error) {
-        return res.status(403).json({ message: 'Invalid token' });
+        if (error.name === 'JsonWebTokenError') {
+            return res.status(401).json({ message: 'Invalid token' });
+        }
+        if (error.name === 'TokenExpiredError') {
+            return res.status(401).json({ message: 'Token expired' });
+        }
+        console.error('Authentication error:', error);
+        return res.status(403).json({ message: 'Authentication failed' });
     }
 };
 
 export const isAdmin = (req, res, next) => {
     if (req.user.role !== 'admin') {
-        return res.status(403).json({ message: 'Access denied' });
+        return res.status(403).json({ message: 'Administrator access required' });
     }
     next();
 };

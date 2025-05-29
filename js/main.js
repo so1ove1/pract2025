@@ -21,24 +21,31 @@ async function fetchAPI(endpoint, options = {}) {
         }
     };
 
-    const response = await fetch(`${API_URL}${endpoint}`, {
-        ...defaultOptions,
-        ...options
-    });
+    try {
+        const response = await fetch(`${API_URL}${endpoint}`, {
+            ...defaultOptions,
+            ...options
+        });
 
-    if (!response.ok) {
-        if (response.status === 401) {
-            localStorage.removeItem('token');
-            localStorage.removeItem('currentUser');
-            window.location.href = 'auth.html';
-            throw new Error('Authentication required');
+        if (!response.ok) {
+            const error = await response.json();
+            if (response.status === 401) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('currentUser');
+                window.location.href = 'auth.html';
+                throw new Error('Session expired. Please log in again.');
+            }
+            throw new Error(error.message || 'Server error');
         }
-        
-        const error = await response.json();
-        throw new Error(error.message || 'Server error');
-    }
 
-    return response.json();
+        return response.json();
+    } catch (error) {
+        console.error('API Error:', error);
+        if (error.message.includes('Session expired')) {
+            alert('Your session has expired. Please log in again.');
+        }
+        throw error;
+    }
 }
 
 /**
@@ -88,17 +95,19 @@ export function formatCurrency(value) {
         
         if (userInfoContainer) {
             userInfoContainer.innerHTML = `
-                <div class="user-avatar">
-                    <i class="fas fa-user-circle"></i>
-                </div>
-                <div class="user-details">
-                    <span class="user-name">${user.name}</span>
-                    <span class="user-role">${user.role === 'admin' ? 'Администратор' : 'Пользователь'}</span>
-                </div>
-                <button class="logout-btn" id="logoutBtn">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Выйти</span>
-                </button>
+                
+                    
+                
+
+                
+                    ${user.name}
+                    ${user.role === 'admin' ? 'Администратор' : 'Пользователь'}
+                
+
+                
+                    
+                    Выйти
+                
             `;
 
             document.getElementById('logoutBtn').addEventListener('click', () => {
@@ -119,6 +128,13 @@ export function formatCurrency(value) {
                 adminCard.style.display = 'none';
             }
         }
+
+        // Validate token on page load
+        fetchAPI('/auth/validate').catch(() => {
+            localStorage.removeItem('token');
+            localStorage.removeItem('currentUser');
+            window.location.href = 'auth.html';
+        });
     } catch (error) {
         console.error('Error processing user data:', error);
         localStorage.removeItem('token');
@@ -134,6 +150,10 @@ export const api = {
         login: (credentials) => fetchAPI('/auth/login', {
             method: 'POST',
             body: JSON.stringify(credentials)
+        }),
+        createUser: (userData) => fetchAPI('/auth/users', {
+            method: 'POST',
+            body: JSON.stringify(userData)
         })
     },
 

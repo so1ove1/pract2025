@@ -3,15 +3,20 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const sequelize = new Sequelize('bratskprof_bit', 'bratskprof_bit', 'a*q0@U@[', {
-    host: 'localhost',
-    dialect: 'mysql',
-    logging: false,
-    timezone: '+05:00',
-    define: {
-        timestamps: true,
-        underscored: true
+const sequelize = new Sequelize(
+    process.env.DB_NAME,
+    process.env.DB_USER,
+    process.env.DB_PASS,
+    {
+        host: process.env.DB_HOST,
+        dialect: 'mysql',
+        logging: false,
+        timezone: '+05:00',
+        define: {
+            timestamps: true,
+            underscored: true
+        }
     }
-});
+);
 
 export default sequelize;

@@ -17,7 +17,7 @@ const app = express();
 app.use(cors({
     origin: process.env.NODE_ENV === 'production' 
         ? 'https://manager.bratskprofil.ru' 
-        : '*',
+        : ['http://localhost:3000', 'http://localhost:3001'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
@@ -36,21 +36,30 @@ app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Error handler
+// Global error handler
 app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({ 
+    console.error('Server Error:', err);
+    if (err.name === 'JsonWebTokenError') {
+        return res.status(401).json({ message: 'Invalid token' });
+    }
+    if (err.name === 'TokenExpiredError') {
+        return res.status(401).json({ message: 'Token expired' });
+    }
+    res.status(err.status || 500).json({ 
         message: err.message || 'Internal server error'
     });
 });
 
 // Initialize database and start server
 const PORT = process.env.PORT || 3001;
-const HOST = 'localhost';
+const HOST = 'localhost'; // Changed to allow external access
 
 sequelize.authenticate()
     .then(() => {
         console.log('Database connection established');
+        return sequelize.sync();
+    })
+    .then(() => {
         const server = app.listen(PORT, HOST, () => {
             console.log(`Server running on ${HOST}:${PORT}`);
         });
