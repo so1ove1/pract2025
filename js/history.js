@@ -195,7 +195,7 @@ function displayHistoryData() {
         row.innerHTML = `
             <td>${formatDate(item.created_at)}</td>
             <td>${item.name}</td>
-            <td>${typeDisplayNames[item.type] || item.type}</td>
+            <td>${typeDisplayNames[item.type] || 'Неизвестный тип'}</td>
             <td>${formatCurrency(item.amount)} ₽</td>
             <td>
                 <button class="btn btn-primary btn-sm view-calculation" data-id="${item.id}">
@@ -265,7 +265,7 @@ function viewCalculation(calculationId) {
     // Формируем содержимое модального окна
     let detailsHtml = `
         <p><strong>Название:</strong> ${calculation.name}</p>
-        <p><strong>Тип:</strong> ${typeDisplayNames[calculation.type] || calculation.type}</p>
+        <p><strong>Тип:</strong> ${typeDisplayNames[calculation.type] || 'Неизвестный тип'}</p>
         <p><strong>Сумма:</strong> ${formatCurrency(calculation.amount)} ₽</p>
         <p><strong>Дата:</strong> ${formatDate(calculation.created_at)}</p>
     `;
