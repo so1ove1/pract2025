@@ -3,7 +3,9 @@
  */
 
 // Base API URL
-const API_URL = 'http://127.0.0.1:3001/api';
+const API_URL = window.location.hostname === 'localhost' 
+    ? 'http://127.0.0.1:3001/api'
+    : '/api';
 
 /**
  * Send request to API with improved error handling and debugging
@@ -23,8 +25,7 @@ async function fetchAPI(endpoint, options = {}) {
     const url = `${API_URL}${endpoint}`;
     console.log(`🚀 API Request to: ${url}`, {
         method: options.method || 'GET',
-        headers: { ...defaultOptions.headers, ...options.headers },
-        body: options.body
+        headers: { ...defaultOptions.headers, ...options.headers }
     });
 
     try {
@@ -33,25 +34,19 @@ async function fetchAPI(endpoint, options = {}) {
             ...options
         });
 
-        // Log response headers for debugging
         console.log('📨 Response Headers:', {
             contentType: response.headers.get('content-type'),
             status: response.status,
             statusText: response.statusText
         });
 
-        // Try to get response text first
-        const responseText = await response.text();
-        console.log('📝 Raw Response:', responseText);
-
-        // Check if response is JSON
-        let data;
-        try {
-            data = JSON.parse(responseText);
-        } catch (e) {
-            console.error('❌ Response is not valid JSON:', e);
-            throw new Error('Invalid JSON response from server');
+        // Handle non-JSON responses
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error(`Неверный тип ответа: ${contentType}`);
         }
+
+        const data = await response.json();
 
         if (!response.ok) {
             if (response.status === 401) {
@@ -146,13 +141,6 @@ export function formatCurrency(value) {
                 adminCard.style.display = 'none';
             }
         }
-
-        // Validate token on page load
-        fetchAPI('/auth/validate').catch(() => {
-            localStorage.removeItem('token');
-            localStorage.removeItem('currentUser');
-            window.location.href = 'auth.html';
-        });
     } catch (error) {
         console.error('Error processing user data:', error);
         localStorage.removeItem('token');
