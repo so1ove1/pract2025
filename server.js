@@ -17,13 +17,19 @@ const app = express();
 app.use(cors({
     origin: process.env.NODE_ENV === 'production' 
         ? 'https://manager.bratskprofil.ru' 
-        : ['http://localhost:3000', 'http://localhost:3001'],
+        : ['http://localhost:3000', 'http://localhost:5173'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
 }));
 
 app.use(express.json());
+
+// Set JSON content type for all responses
+app.use((req, res, next) => {
+    res.setHeader('Content-Type', 'application/json');
+    next();
+});
 
 // API routes
 app.use('/api/auth', authRoutes);
@@ -52,7 +58,6 @@ app.use((err, req, res, next) => {
 
 // Initialize database and start server
 const PORT = process.env.PORT || 3001;
-const HOST = 'localhost'; // Changed to allow external access
 
 sequelize.authenticate()
     .then(() => {
@@ -60,17 +65,8 @@ sequelize.authenticate()
         return sequelize.sync();
     })
     .then(() => {
-        const server = app.listen(PORT, HOST, () => {
-            console.log(`Server running on ${HOST}:${PORT}`);
-        });
-
-        server.on('error', (error) => {
-            if (error.code === 'EADDRINUSE') {
-                console.error(`Port ${PORT} is already in use. Please try a different port.`);
-                process.exit(1);
-            } else {
-                console.error('Server error:', error);
-            }
+        app.listen(PORT, () => {
+            console.log(`Server running on port ${PORT}`);
         });
     })
     .catch(err => {
