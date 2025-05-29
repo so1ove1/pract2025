@@ -25,6 +25,7 @@ async function initAuthForm() {
     
     try {
         const users = await api.auth.getUsers();
+        userSelect.innerHTML = '<option value="" disabled selected>Выберите пользователя</option>';
         
         users.forEach(user => {
             const option = document.createElement('option');
@@ -34,7 +35,7 @@ async function initAuthForm() {
         });
     } catch (error) {
         console.error('Error loading users:', error);
-        authError.textContent = 'Error loading users. Please refresh the page.';
+        authError.textContent = 'Ошибка загрузки пользователей. Пожалуйста, обновите страницу.';
     }
     
     authForm.addEventListener('submit', async (event) => {
@@ -44,22 +45,25 @@ async function initAuthForm() {
         const password = document.getElementById('password').value;
         
         if (!login || !password) {
-            authError.textContent = 'Please fill in all fields';
+            authError.textContent = 'Пожалуйста, заполните все поля';
             return;
         }
         
         authError.textContent = '';
         
         try {
-            const data = await api.auth.login({ login, password });
+            const response = await api.auth.login({ login, password });
             
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('currentUser', JSON.stringify(data.user));
-            
-            window.location.href = 'index.html';
+            if (response && response.token && response.user) {
+                localStorage.setItem('token', response.token);
+                localStorage.setItem('currentUser', JSON.stringify(response.user));
+                window.location.href = 'index.html';
+            } else {
+                throw new Error('Неверный формат ответа от сервера');
+            }
         } catch (error) {
             console.error('Authentication error:', error);
-            authError.textContent = error.message || 'Authentication failed';
+            authError.textContent = error.message || 'Ошибка аутентификации';
         }
     });
 }
