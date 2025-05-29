@@ -374,24 +374,18 @@ function calculateFenceMaterials() {
         // x = длину забора / монтажная ширина профлиста
         const sheetsCount = customRound(length / material.working_width);
 
-        // Цена за м²
-        const pricePerM2 = priceOption.price;
-
-        // Стоимость за 1 лист
-        const pricePerSheet = priceOption.price * material.overall_width * height;
-
-        // Общая стоимость
-        const totalPrice = pricePerSheet * sheetsCount;
-
         results.push({
+            materialId: parseInt(materialId),
+            priceId: parseInt(priceId),
             name: `${material.name} (${priceOption.coating}, ${priceOption.thickness} мм)`,
             unit: material.unit,
             length: height,
             quantity: sheetsCount,
-            pricePerM2: pricePerM2,
-            price: pricePerSheet,
-            total: totalPrice,
-            overallWidth: material.overall_width
+            pricePerM2: priceOption.price,
+            price: priceOption.price * material.overall_width * height,
+            total: priceOption.price * material.overall_width * height * sheetsCount,
+            overallWidth: material.overall_width,
+            workingWidth: material.working_width
         });
     } else {
         // Расчет для штакетника
@@ -414,24 +408,18 @@ function calculateFenceMaterials() {
         // x = ([длина забора / (ширина габаритная штакетины + расстояние между деталями)]-округлить + 1)
         const stakesCount = customRound(length / ((material.overall_width + spacing) / 1000)) + 1;
 
-        // Цена за м²
-        const pricePerM2 = priceOption.price;
-
-        // Стоимость за 1 штакетину
-        const pricePerStake = priceOption.price * material.overall_width * height;
-
-        // Общая стоимость
-        const totalPrice = pricePerStake * stakesCount;
-
         results.push({
+            materialId: parseInt(materialId),
+            priceId: parseInt(priceId),
             name: `${material.name} (${priceOption.coating}, ${priceOption.thickness} мм)`,
             unit: material.unit,
             length: height,
             quantity: stakesCount,
-            pricePerM2: pricePerM2,
-            price: pricePerStake,
-            total: totalPrice,
-            overallWidth: material.overall_width
+            pricePerM2: priceOption.price,
+            price: priceOption.price * material.overall_width * height,
+            total: priceOption.price * material.overall_width * height * stakesCount,
+            overallWidth: material.overall_width,
+            workingWidth: material.working_width
         });
     }
 
@@ -457,8 +445,7 @@ function calculateRoofMaterials() {
 
     if (!material || !priceOption) return [];
 
-    let totalArea = 0;
-    let length1, length2, width;
+    let length1, width;
 
     if (roofType === 'single') {
         length1 = parseFloat(document.getElementById('singleRoofLength').value);
@@ -472,24 +459,18 @@ function calculateRoofMaterials() {
         // x = (ширина крыши / монтажная ширина материала)
         const sheetsCount = customRound(width / material.working_width);
 
-        // Цена за м²
-        const pricePerM2 = priceOption.price;
-
-        // Стоимость за 1 лист
-        const pricePerSheet = priceOption.price * material.overall_width * length1;
-
-        // Общая стоимость
-        const totalPrice = pricePerSheet * sheetsCount;
-
         results.push({
+            materialId: parseInt(materialId),
+            priceId: parseInt(priceId),
             name: `${material.name} (${priceOption.coating}, ${priceOption.thickness} мм)`,
             unit: material.unit,
             length: length1,
             quantity: sheetsCount,
-            pricePerM2: pricePerM2,
-            price: pricePerSheet,
-            total: totalPrice,
-            overallWidth: material.overall_width
+            pricePerM2: priceOption.price,
+            price: priceOption.price * material.overall_width * length1,
+            total: priceOption.price * material.overall_width * length1 * sheetsCount,
+            overallWidth: material.overall_width,
+            workingWidth: material.working_width
         });
     } else {
         length1 = parseFloat(document.getElementById('doubleRoofLength').value);
@@ -503,24 +484,18 @@ function calculateRoofMaterials() {
         // x = (ширина крыши / монтажная ширина материала)
         const sheetsCount = customRound(width / material.working_width);
 
-        // Цена за м²
-        const pricePerM2 = priceOption.price;
-
-        // Стоимость за 1 лист
-        const pricePerSheet = priceOption.price * material.overall_width * length1;
-
-        // Общая стоимость (для двух скатов)
-        const totalPrice = pricePerSheet * sheetsCount * 2;
-
         results.push({
+            materialId: parseInt(materialId),
+            priceId: parseInt(priceId),
             name: `${material.name} (${priceOption.coating}, ${priceOption.thickness} мм)`,
             unit: material.unit,
             length: length1,
-            quantity: sheetsCount * 2,
-            pricePerM2: pricePerM2,
-            price: pricePerSheet,
-            total: totalPrice,
-            overallWidth: material.overall_width
+            quantity: sheetsCount * 2, // Умножаем на 2 для двух скатов
+            pricePerM2: priceOption.price,
+            price: priceOption.price * material.overall_width * length1,
+            total: priceOption.price * material.overall_width * length1 * sheetsCount * 2,
+            overallWidth: material.overall_width,
+            workingWidth: material.working_width
         });
     }
 
@@ -561,43 +536,30 @@ function calculateSidingMaterials() {
             return;
         }
 
-        let sheetsCount, pricePerSheet, totalPrice;
+        let sheetsCount, length;
 
         if (materialType === 'proflist') {
             // x = (ширина стены / ширина монтажная)
             sheetsCount = customRound(width / material.working_width);
-
-            // Цена за м²
-            const pricePerM2 = priceOption.price;
-
-            // Стоимость за 1 лист
-            pricePerSheet = priceOption.price * material.overall_width * height;
-
-            // Общая стоимость
-            totalPrice = pricePerSheet * sheetsCount;
+            length = height;
         } else { // сайдинг
             // x = (высота стены / ширина монтажная)
             sheetsCount = customRound(height / material.working_width);
-
-            // Цена за м²
-            const pricePerM2 = priceOption.price;
-
-            // Стоимость за 1 лист
-            pricePerSheet = priceOption.price * material.overall_width * width;
-
-            // Общая стоимость
-            totalPrice = pricePerSheet * sheetsCount;
+            length = width;
         }
 
         results.push({
+            materialId: parseInt(materialId),
+            priceId: parseInt(priceId),
             name: `${material.name} (${priceOption.coating}, ${priceOption.thickness} мм) - Стена ${index + 1}`,
             unit: material.unit,
-            length: materialType === 'proflist' ? height : width,
+            length: length,
             quantity: sheetsCount,
-            pricePerM2: pricePerM2,
-            price: pricePerSheet,
-            total: totalPrice,
-            overallWidth: material.overall_width
+            pricePerM2: priceOption.price,
+            price: priceOption.price * material.overall_width * length,
+            total: priceOption.price * material.overall_width * length * sheetsCount,
+            overallWidth: material.overall_width,
+            workingWidth: material.working_width
         });
     });
 
@@ -628,11 +590,6 @@ function updateResultsTable() {
     let totalAmount = 0;
 
     calculationResults.forEach((item, index) => {
-        // Используем сохраненные значения
-        const pricePerM2 = Number(item.pricePerM2).toFixed(2);
-        const pricePerPiece = item.price;
-        const total = item.total;
-
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${index + 1}</td>
@@ -644,14 +601,14 @@ function updateResultsTable() {
             </td>
             <td>${item.quantity}</td>
             <td>
-                <input type="number" class="price-input" value="${pricePerM2}" 
+                <input type="number" class="price-input" value="${item.pricePerM2}" 
                     min="0.01" step="0.01" data-index="${index}">
             </td>
-            <td>${formatCurrency(pricePerPiece)}</td>
-            <td>${formatCurrency(total)}</td>
+            <td>${formatCurrency(item.price)}</td>
+            <td>${formatCurrency(item.total)}</td>
         `;
         tbody.appendChild(row);
-        totalAmount += total;
+        totalAmount += item.total;
     });
 
     // Добавляем обработчики для изменения длины и цены
@@ -725,7 +682,19 @@ async function saveCalculation() {
             type: calculationType,
             amount: totalAmount,
             details: {
-                items: calculationResults
+                items: calculationResults.map(item => ({
+                    materialId: item.materialId,
+                    priceId: item.priceId,
+                    name: item.name,
+                    unit: item.unit,
+                    length: item.length,
+                    quantity: item.quantity,
+                    pricePerM2: item.pricePerM2,
+                    price: item.price,
+                    total: item.total,
+                    overallWidth: item.overallWidth,
+                    workingWidth: item.workingWidth
+                }))
             }
         };
 
