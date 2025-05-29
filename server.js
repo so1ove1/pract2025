@@ -40,19 +40,28 @@ app.get('/api/health', (req, res) => {
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).json({ 
-        message: err.message || 'Внутренняя ошибка сервера'
+        message: err.message || 'Internal server error'
     });
 });
 
 // Initialize database and start server
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 const HOST = 'localhost';
 
 sequelize.authenticate()
     .then(() => {
         console.log('Database connection established');
-        app.listen(PORT, HOST, () => {
+        const server = app.listen(PORT, HOST, () => {
             console.log(`Server running on ${HOST}:${PORT}`);
+        });
+
+        server.on('error', (error) => {
+            if (error.code === 'EADDRINUSE') {
+                console.error(`Port ${PORT} is already in use. Please try a different port.`);
+                process.exit(1);
+            } else {
+                console.error('Server error:', error);
+            }
         });
     })
     .catch(err => {

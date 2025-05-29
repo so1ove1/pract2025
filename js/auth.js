@@ -1,9 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-    import.meta.env.VITE_SUPABASE_URL,
-    import.meta.env.VITE_SUPABASE_ANON_KEY
-);
+import { api } from './main.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     initAuthForm();
@@ -15,21 +10,19 @@ async function initAuthForm() {
     const authForm = document.getElementById('authForm');
     const authError = document.getElementById('authError');
     
-    // Check if user is already authenticated
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session) {
+    // Check if user is already logged in
+    const token = localStorage.getItem('token');
+    if (token) {
         window.location.href = 'index.html';
         return;
     }
     
-    // Load users for dropdown
     try {
-        const { data: users, error } = await supabase
-            .from('users')
-            .select('login, name')
-            .order('name');
-            
-        if (error) throw error;
+        const response = await fetch('http://localhost:3001/api/auth/users');
+        if (!response.ok) {
+            throw new Error('Failed to fetch users');
+        }
+        const users = await response.json();
         
         users.forEach(user => {
             const option = document.createElement('option');
@@ -39,10 +32,9 @@ async function initAuthForm() {
         });
     } catch (error) {
         console.error('Error loading users:', error);
-        authError.textContent = 'Error loading data. Please refresh the page.';
+        authError.textContent = 'Error loading users. Please refresh the page.';
     }
     
-    // Handle form submission
     authForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         
@@ -57,27 +49,27 @@ async function initAuthForm() {
         authError.textContent = '';
         
         try {
-            const { data, error } = await supabase.auth.signInWithPassword({
-                email: `${login}@bratskprofil.ru`,
-                password: password
+            const response = await fetch('http://localhost:3001/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ login, password })
             });
             
-            if (error) throw error;
+            const data = await response.json();
             
-            // Get user details
-            const { data: userData, error: userError } = await supabase
-                .from('users')
-                .select('*')
-                .eq('login', login)
-                .single();
-                
-            if (userError) throw userError;
+            if (!response.ok) {
+                throw new Error(data.message || 'Authentication failed');
+            }
             
-            // Redirect to home page
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('currentUser', JSON.stringify(data.user));
+            
             window.location.href = 'index.html';
         } catch (error) {
             console.error('Authentication error:', error);
-            authError.textContent = 'Invalid login or password';
+            authError.textContent = error.message || 'Authentication failed';
         }
     });
 }

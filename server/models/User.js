@@ -9,16 +9,16 @@ const User = sequelize.define('User', {
         autoIncrement: true
     },
     login: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING(50),
         allowNull: false,
         unique: true
     },
     name: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING(100),
         allowNull: false
     },
     password: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING(255),
         allowNull: false
     },
     role: {
@@ -31,7 +31,8 @@ const User = sequelize.define('User', {
 }, {
     hooks: {
         beforeCreate: async (user) => {
-            user.password = await bcrypt.hash(user.password, 10);
+            const salt = await bcrypt.genSalt(10);
+            user.password = await bcrypt.hash(user.password, salt);
         }
     }
 });
