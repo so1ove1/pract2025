@@ -9,6 +9,11 @@ let materialsData = []; // Материалы
 let priceListData = []; // Прайс-лист
 let calculationResults = []; // Результаты расчета
 
+// Вспомогательная функция для округления
+function customRound(value) {
+    return Math.ceil(value);
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     // Загрузка данных
     await loadMaterialsData();
@@ -343,6 +348,186 @@ function calculateMaterials() {
     
     calculationResults = results;
     updateResultsTable();
+}
+
+/**
+ * Расчет материалов для забора
+ */
+function calculateFenceMaterials() {
+    const results = [];
+    const fenceMaterialType = document.getElementById('fenceMaterialType').value;
+    
+    if (fenceMaterialType === 'proflist') {
+        // Расчет для профлиста
+        const materialId = document.getElementById('proflistType').value;
+        const priceId = document.getElementById('proflistCoating').value;
+        const length = parseFloat(document.getElementById('fenceLength').value);
+        const height = parseFloat(document.getElementById('fenceHeight').value);
+        
+        if (!materialId || !priceId || !length || !height) {
+            alert('Заполните все поля для расчета');
+            return [];
+        }
+        
+        const material = materialsData.find(m => m.id === parseInt(materialId));
+        const priceOption = priceListData.find(p => p.id === parseInt(priceId));
+        
+        if (!material || !priceOption) return [];
+        
+        const sheetsCount = customRound(length / material.working_width);
+        const totalArea = length * height;
+        
+        results.push({
+            name: `${material.name} (${priceOption.coating}, ${priceOption.thickness} мм)`,
+            unit: material.unit,
+            length: height,
+            quantity: sheetsCount,
+            price: priceOption.price,
+            total: totalArea * priceOption.price
+        });
+    } else {
+        // Расчет для штакетника
+        const materialId = document.getElementById('stakeType').value;
+        const priceId = document.getElementById('stakeCoating').value;
+        const length = parseFloat(document.getElementById('stakeFenceLength').value);
+        const height = parseFloat(document.getElementById('stakeFenceHeight').value);
+        const spacing = parseFloat(document.getElementById('stakeSpacing').value);
+        
+        if (!materialId || !priceId || !length || !height || isNaN(spacing)) {
+            alert('Заполните все поля для расчета');
+            return [];
+        }
+        
+        const material = materialsData.find(m => m.id === parseInt(materialId));
+        const priceOption = priceListData.find(p => p.id === parseInt(priceId));
+        
+        if (!material || !priceOption) return [];
+        
+        const stakesCount = customRound(length / ((material.working_width + spacing) / 1000));
+        const totalArea = stakesCount * height * material.working_width;
+        
+        results.push({
+            name: `${material.name} (${priceOption.coating}, ${priceOption.thickness} мм)`,
+            unit: material.unit,
+            length: height,
+            quantity: stakesCount,
+            price: priceOption.price,
+            total: totalArea * priceOption.price
+        });
+    }
+    
+    return results;
+}
+
+/**
+ * Расчет материалов для крыши
+ */
+function calculateRoofMaterials() {
+    const results = [];
+    const roofType = document.getElementById('roofType').value;
+    const materialType = document.getElementById('roofMaterialType').value;
+    const materialId = document.getElementById('roofSubtype').value;
+    const priceId = document.getElementById('roofCoating').value;
+    
+    if (!materialId || !priceId) {
+        alert('Выберите материал и покрытие');
+        return [];
+    }
+    
+    const material = materialsData.find(m => m.id === parseInt(materialId));
+    const priceOption = priceListData.find(p => p.id === parseInt(priceId));
+    
+    if (!material || !priceOption) return [];
+    
+    let totalArea = 0;
+    let length, width;
+    
+    if (roofType === 'single') {
+        length = parseFloat(document.getElementById('singleRoofLength').value);
+        width = parseFloat(document.getElementById('singleRoofWidth').value);
+        
+        if (!length || !width) {
+            alert('Заполните размеры ската');
+            return [];
+        }
+        
+        totalArea = length * width;
+    } else {
+        length = parseFloat(document.getElementById('doubleRoofLength').value);
+        width = parseFloat(document.getElementById('doubleRoofWidth').value);
+        
+        if (!length || !width) {
+            alert('Заполните размеры ската');
+            return [];
+        }
+        
+        totalArea = 2 * length * width;
+    }
+    
+    const sheetsCount = customRound(width / material.working_width);
+    
+    results.push({
+        name: `${material.name} (${priceOption.coating}, ${priceOption.thickness} мм)`,
+        unit: material.unit,
+        length: length,
+        quantity: sheetsCount,
+        price: priceOption.price,
+        total: totalArea * priceOption.price
+    });
+    
+    return results;
+}
+
+/**
+ * Расчет материалов для обшивки
+ */
+function calculateSidingMaterials() {
+    const results = [];
+    const materialType = document.getElementById('sidingMaterialType').value;
+    const materialId = document.getElementById('sidingSubtype').value;
+    const priceId = document.getElementById('sidingCoating').value;
+    
+    if (!materialId || !priceId) {
+        alert('Выберите материал и покрытие');
+        return [];
+    }
+    
+    const material = materialsData.find(m => m.id === parseInt(materialId));
+    const priceOption = priceListData.find(p => p.id === parseInt(priceId));
+    
+    if (!material || !priceOption) return [];
+    
+    const walls = document.querySelectorAll('.wall-item');
+    let totalArea = 0;
+    let maxLength = 0;
+    
+    walls.forEach(wall => {
+        const length = parseFloat(wall.querySelector('.wall-length').value);
+        const height = parseFloat(wall.querySelector('.wall-height').value);
+        
+        if (length && height) {
+            totalArea += length * height;
+            maxLength = Math.max(maxLength, length);
+        }
+    });
+    
+    if (totalArea === 0) {
+        alert('Добавьте хотя бы одну стену и укажите её размеры');
+        return [];
+    }
+    
+    const sheetsCount = customRound(maxLength / material.working_width);
+    
+    results.push({
+        name: `${material.name} (${priceOption.coating}, ${priceOption.thickness} мм)`,
+        unit: material.unit,
+        length: maxLength,
+        quantity: sheetsCount,
+        price: priceOption.price,
+        total: totalArea * priceOption.price
+    });
+    
+    return results;
 }
 
 /**
