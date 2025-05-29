@@ -42,7 +42,7 @@ async function initMaterialModal() {
         const categories = await api.categories.getAll();
         
         if (materialCategory) {
-            // Заполняем выпадающий список
+            materialCategory.innerHTML = '<option value="">Все категории</option>';
             categories.forEach(category => {
                 const option = document.createElement('option');
                 option.value = category.id;
@@ -128,8 +128,8 @@ async function loadMaterialsList() {
                                     data-price="${option.price}"
                                     data-coating="${option.coating}"
                                     data-thickness="${option.thickness}"
-                                    data-overall-width="${material.overallWidth}"
-                                    data-working-width="${material.workingWidth}">
+                                    data-overall-width="${material.overallWidth || 1}"
+                                    data-working-width="${material.workingWidth || 1}">
                                     ${option.coating}, ${option.thickness} мм - ${formatCurrency(option.price)} ₽/${material.unit}
                                 </option>
                             `).join('')}
@@ -195,8 +195,8 @@ function addMaterialToCalculation(materialData) {
     const newItem = {
         ...materialData,
         length: 1, // Длина в метрах
-        quantity: 1, // Количество листов (по умолчанию 1)
-        total: calculateItemTotal(materialData.price, 1, materialData.overallWidth, 1)
+        quantity: 1, // Количество листов
+        total: calculateItemTotal(materialData.price, 1, materialData.overallWidth || 1, 1)
     };
     
     itemsData.push(newItem);
@@ -209,8 +209,7 @@ function addMaterialToCalculation(materialData) {
  * Расчет стоимости для одной позиции
  */
 function calculateItemTotal(price, length, overallWidth, quantity) {
-    const pricePerSheet = length * price * overallWidth;
-    return pricePerSheet * quantity;
+    return price * length * overallWidth * quantity;
 }
 
 /**
@@ -258,7 +257,10 @@ function updateCalculationTable() {
                 <input type="number" class="quantity-input" value="${item.quantity}" 
                     min="1" step="1" data-index="${index}">
             </td>
-            <td>${formatCurrency(item.price)} ₽</td>
+            <td>
+                <input type="number" class="price-input" value="${item.price}" 
+                    min="0.01" step="0.01" data-index="${index}">
+            </td>
             <td>${formatCurrency(item.total)} ₽</td>
             <td class="actions-cell">
                 <button class="btn btn-sm btn-info btn-copy" data-index="${index}" title="Копировать">
@@ -276,9 +278,10 @@ function updateCalculationTable() {
     // Обновляем итоговую сумму
     totalAmountElement.textContent = `${formatCurrency(totalAmount)} ₽`;
     
-    // Добавляем обработчики для изменения длины и количества
+    // Добавляем обработчики для изменения длины, количества и цены
     const lengthInputs = document.querySelectorAll('.length-input');
     const quantityInputs = document.querySelectorAll('.quantity-input');
+    const priceInputs = document.querySelectorAll('.price-input');
     const copyButtons = document.querySelectorAll('.btn-copy');
     const deleteButtons = document.querySelectorAll('.delete-item-btn');
     
@@ -310,6 +313,22 @@ function updateCalculationTable() {
             }
             
             itemsData[index].quantity = quantity;
+            updateCalculationTable();
+        });
+    });
+    
+    // Обработчики для изменения цены
+    priceInputs.forEach(input => {
+        input.addEventListener('change', () => {
+            const index = parseInt(input.getAttribute('data-index'));
+            const price = parseFloat(input.value);
+            
+            if (price <= 0 || isNaN(price)) {
+                input.value = itemsData[index].price;
+                return;
+            }
+            
+            itemsData[index].price = price;
             updateCalculationTable();
         });
     });
@@ -458,8 +477,8 @@ function printCalculation() {
                 </tbody>
                 <tfoot>
                     <tr>
-                        <td colspan="5" class="total">Итого:</td>
-                        <td>${formatCurrency(totalAmount)} ₽</td>
+                        <td colspan="5" class="text-right"><strong>Итого:</strong></td>
+                        <td><strong>${formatCurrency(totalAmount)} ₽</strong></td>
                     </tr>
                 </tfoot>
             </table>
