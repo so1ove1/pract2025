@@ -8,12 +8,12 @@ const router = express.Router();
 router.get('/', authenticateToken, async (req, res) => {
     try {
         const { dateFrom, dateTo, type, amountFrom, amountTo } = req.query;
-        const where = { userId: req.user.id };
+        const where = { user_id: req.user.id }; // Updated to user_id to match schema
         
         if (dateFrom || dateTo) {
-            where.createdAt = {};
-            if (dateFrom) where.createdAt.$gte = new Date(dateFrom);
-            if (dateTo) where.createdAt.$lte = new Date(dateTo);
+            where.created_at = {};
+            if (dateFrom) where.created_at.$gte = new Date(dateFrom);
+            if (dateTo) where.created_at.$lte = new Date(dateTo);
         }
         
         if (type) where.type = type;
@@ -26,12 +26,13 @@ router.get('/', authenticateToken, async (req, res) => {
         
         const calculations = await Calculation.findAll({
             where,
-            order: [['createdAt', 'DESC']]
+            order: [['created_at', 'DESC']]
         });
         
         res.json(calculations);
     } catch (error) {
-        res.status(500).json({ message: 'Ошибка при получении расчетов' });
+        console.error('Error fetching calculations:', error);
+        res.status(500).json({ message: 'Ошибка при получении расчетов', error: error.message });
     }
 });
 
@@ -40,12 +41,13 @@ router.post('/', authenticateToken, async (req, res) => {
     try {
         const calculation = await Calculation.create({
             ...req.body,
-            userId: req.user.id
+            user_id: req.user.id // Changed from userId to user_id to match schema
         });
         
         res.status(201).json(calculation);
     } catch (error) {
-        res.status(500).json({ message: 'Ошибка при сохранении расчета' });
+        console.error('Error saving calculation:', error);
+        res.status(500).json({ message: 'Ошибка при сохранении расчета', error: error.message });
     }
 });
 
@@ -55,7 +57,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
         const calculation = await Calculation.findOne({
             where: {
                 id: req.params.id,
-                userId: req.user.id
+                user_id: req.user.id // Updated to user_id to match schema
             }
         });
         
@@ -66,7 +68,8 @@ router.delete('/:id', authenticateToken, async (req, res) => {
         await calculation.destroy();
         res.json({ message: 'Расчет успешно удален' });
     } catch (error) {
-        res.status(500).json({ message: 'Ошибка при удалении расчета' });
+        console.error('Error deleting calculation:', error);
+        res.status(500).json({ message: 'Ошибка при удалении расчета', error: error.message });
     }
 });
 

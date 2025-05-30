@@ -11,10 +11,10 @@ let currentPage = 1; // Текущая страница
 
 // Маппинг типов расчетов на отображаемые названия
 const typeDisplayNames = {
-    'cost': 'Расчет стоимости',
-    'materials-fence': 'Расчет забора',
-    'materials-roof': 'Расчет крыши',
-    'materials-siding': 'Расчет обшивки'
+    'calculation-cost': 'Расчет стоимости',
+    'calculation-fence': 'Расчет забора',
+    'calculation-roof': 'Расчет крыши',
+    'calculation-siding': 'Расчет обшивки'
 };
 
 document.addEventListener('DOMContentLoaded', async () => {

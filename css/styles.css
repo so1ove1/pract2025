@@ -101,12 +101,12 @@ a:hover {
 .main-header {
     background-color: var(--primary-color);
     color: white;
-    padding: 0 24px;
-    height: var(--header-height);
+    padding: 1px 16px;
+    height: auto;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 4px rgba(0, 0,0.1);
     position: sticky;
     top: 0;
     z-index: 100;
@@ -136,9 +136,10 @@ a:hover {
 .main-nav a {
     color: white;
     text-decoration: none;
-    padding: 8px 12px;
+    padding: 8px;
     border-radius: var(--border-radius);
     transition: background-color var(--transition-speed) ease;
+
 }
 
 .main-nav a:hover {
@@ -148,23 +149,23 @@ a:hover {
 
 .main-nav a.active {
     background-color: rgba(255, 255, 255, 0.2);
-    font-weight: 500;
+    font-weight: bold;
 }
 
 .user-info {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
 }
 
 .user-info .user-name {
-    font-weight: 500;
+    font-weight: bold;
 }
 
 .user-info .logout-btn {
-    background: none;
+    background-color: white;
     border: none;
-    color: white;
+    color: black;
     cursor: pointer;
     padding: 4px 8px;
     border-radius: var(--border-radius);
@@ -379,6 +380,107 @@ table {
     display: none !important;
 }
 
+/* Страница авторизации */
+.auth-page {
+    background: linear-gradient(135deg, var(--primary-light), var(--primary-dark));
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.auth-container {
+    width: 100%;
+    max-width: 420px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.auth-logo {
+    margin-bottom: 32px;
+}
+
+.auth-card {
+    background-color: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 32px;
+    width: 100%;
+}
+
+.auth-card h1 {
+    text-align: center;
+    margin-bottom: 24px;
+    color: var(--primary-color);
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.auth-error {
+    color: var(--error-color);
+    font-size: 0.875rem;
+    margin-top: 8px;
+}
+
+.auth-footer {
+    margin-top: 24px;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* Главная страница */
+.page-title {
+    margin-bottom: 32px;
+    text-align: center;
+    color: var(--primary-color);
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+}
+
+.feature-card {
+    background-color: white;
+    padding: 24px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    text-align: center;
+    transition: transform var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: var(--gray-800);
+}
+
+.feature-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    text-decoration: none;
+}
+
+.card-icon {
+    font-size: 2.5rem;
+    margin-bottom: 16px;
+    color: var(--primary-color);
+}
+
+.feature-card h2 {
+    color: var(--primary-color);
+    margin-bottom: 8px;
+}
+
+.feature-card p {
+    color: var(--gray-600);
+}
+
 /* Модальные окна */
 .modal {
     display: none;
@@ -391,6 +493,11 @@ table {
     background-color: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(4px);
     animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 .modal-content {
@@ -409,6 +516,11 @@ table {
 
 .modal-xl {
     max-width: 1200px;
+}
+
+@keyframes slideDown {
+    from { transform: translateY(-50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
 }
 
 .modal-header {
@@ -510,33 +622,566 @@ table {
     color: var(--primary-color);
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+/* Расчет стоимости */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
 }
 
-@keyframes slideDown {
-    from { transform: translateY(-50px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+.calculation-container {
+    background-color: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 24px;
+    margin-bottom: 24px;
 }
 
-/* Адаптивный дизайн */
+.items-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    background-color: white;
+}
+
+.items-table th,
+.items-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--gray-200);
+    height: 48px;
+    vertical-align: middle;
+}
+
+.items-table th {
+    background-color: var(--gray-100);
+    font-weight: 500;
+}
+
+.items-table input {
+    width: 120px;
+    padding: 8px;
+    border: 1px solid var(--gray-300);
+    border-radius: var(--border-radius);
+}
+
+.items-table input:focus {
+    outline: none;
+    border-color: var(--primary-light);
+    box-shadow: 0 0 0 2px rgba(74, 124, 195, 0.2);
+}
+
+.items-table tfoot td {
+    font-weight: 500;
+}
+
+.calculation-actions {
+    margin-top: 24px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+/* Стили для модального окна выбора материала */
+.material-selection-modal .modal-content {
+    width: 90%;
+    max-width: 800px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.material-selection-modal .modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+}
+
+.materials-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.material-item {
+    border: 1px solid var(--gray-200);
+    border-radius: var(--border-radius);
+    padding: 16px;
+    background-color: white;
+    transition: all var(--transition-speed) ease;
+}
+
+.material-item:hover {
+    border-color: var(--primary-color);
+    box-shadow: var(--box-shadow);
+}
+
+.material-info {
+    margin-bottom: 12px;
+}
+
+.material-info h3 {
+    margin: 0 0 4px 0;
+    font-size: 1rem;
+    color: var(--gray-900);
+}
+
+.material-info p {
+    margin: 0;
+    color: var(--gray-600);
+    font-size: 0.875rem;
+}
+
+.price-options {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.price-select {
+    flex: 1;
+}
+
+/* Стили для фильтров материалов */
+.material-filters {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+    padding: 16px;
+    background-color: var(--gray-100);
+    border-radius: var(--border-radius);
+}
+
+/* Страница администрирования */
+.admin-container {
+    background-color: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 24px;
+}
+
+.tab-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.tab-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.materials-management {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    gap: 24px;
+}
+
+.categories-sidebar {
+    border-right: 1px solid var(--gray-200);
+    padding-right: 24px;
+}
+
+.categories-list {
+    list-style: none;
+}
+
+.categories-list li {
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: var(--border-radius);
+    margin-bottom: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.categories-list li:hover {
+    background-color: var(--gray-100);
+}
+
+.categories-list li.active {
+    background-color: var(--primary-light);
+    color: white;
+}
+
+.pricelist-filters {
+    margin-bottom: 24px;
+    padding: 16px;
+    background-color: var(--gray-100);
+    border-radius: var(--border-radius);
+}
+
+/* История расчетов */
+.history-filters {
+    margin-bottom: 24px;
+    padding: 16px;
+    background-color: var(--gray-100);
+    border-radius: var(--border-radius);
+}
+
+.filter-buttons {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 24px;
+}
+
+.page-btn {
+    min-width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--gray-300);
+    background-color: white;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.page-btn.active {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.page-btn:hover:not(.active) {
+    background-color: var(--gray-100);
+}
+
+.calculation-results {
+    padding: 16px;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--border-radius);
+    margin: 24px 0;
+}
+
+.items-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    background-color: white;
+}
+
+.items-table th,
+.items-table td {
+    padding: 12px 16px;
+    text-align: left;
+    border: 1px solid var(--gray-200);
+    vertical-align: middle;
+    height: 48px;
+    line-height: 1.5;
+}
+
+.items-table th {
+    background-color: var(--gray-100);
+    font-weight: 500;
+    color: var(--gray-700);
+    white-space: nowrap;
+}
+
+.items-table tbody tr:hover {
+    background-color: var(--gray-50);
+}
+
+.items-table input[type="number"] {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid var(--gray-300);
+    border-radius: var(--border-radius);
+    font-size: 14px;
+}
+
+.items-table .actions-cell {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-start;
+    align-items: center;
+    height: 100%;
+    min-height: 48px;
+}
+
+.items-table .btn-sm {
+    padding: 6px 8px;
+    line-height: 1;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.items-table tfoot td {
+    background-color: var(--gray-50);
+    font-weight: 500;
+}
+
+/* Adding new styles for the copy button and quantity field */
+.items-table .actions-cell {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-start;
+    align-items: center;
+    height: 100%;
+}
+
+.items-table .quantity-input,
+.items-table .length-input {
+    width: 80px;
+    text-align: right;
+}
+
+.btn-copy {
+    background-color: var(--info-color);
+    color: white;
+}
+
+.btn-copy:hover {
+    background-color: #2563eb;
+}
+
+/* Small buttons in tables */
+.btn-sm {
+    padding: 6px 8px;
+    line-height: 1;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+}
+
+/* Form help text */
+.form-help {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.875rem;
+    color: var(--gray-500);
+}
+
+.items-table td {
+    height: 48px;
+    vertical-align: middle;
+}
+
+.items-table .actions-cell {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-start;
+    align-items: center;
+    height: 100%;
+}
+
+.items-table .btn-sm {
+    padding: 6px 8px;
+    line-height: 1;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.items-table input.length-input,
+.items-table input.quantity-input {
+    width: 80px;
+    text-align: right;
+    padding: 4px 8px;
+    height: 32px;
+}
+
+/* Fix mobile navigation */
 @media (max-width: 768px) {
+    .main-header {
+        flex-direction: column;
+        height: auto;
+        padding: 16px;
+    }
+    
+    .logo-container {
+        margin-bottom: 16px;
+    }
+    
+    .main-nav {
+        width: 100%;
+        margin-bottom: 16px;
+    }
+    
+    .main-nav ul {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .main-nav li {
+        width: 100%;
+    }
+    
+    .main-nav a {
+        display: block;
+        width: 100%;
+        text-align: center;
+        padding: 12px;
+    }
+    
+    .user-info {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .form-row {
+        flex-direction: column;
+    }
+    
+    .form-row .form-group {
+        flex: 1 1 100%;
+    }
+    
+    .tab-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+    
+    .tab-actions {
+        width: 100%;
+    }
+    
+    .materials-management {
+        grid-template-columns: 1fr;
+    }
+    
+    .categories-sidebar {
+        border-right: none;
+        border-bottom: 1px solid var(--gray-200);
+        padding-right: 0;
+        padding-bottom: 16px;
+        margin-bottom: 16px;
+    }
+    
     .modal-content {
         margin: 5vh auto;
         width: 95%;
     }
-
+    
     .modal-body {
         padding: 16px;
     }
-
+    
     .calculation-info {
         padding: 16px;
     }
-
+    
     .calculation-details td,
     .calculation-details th {
         padding: 8px;
     }
+}
+
+/* Fix tabs */
+.calculation-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    background-color: var(--gray-100);
+    padding: 8px;
+    border-radius: var(--border-radius);
+}
+
+.calculation-tabs .tab-btn {
+    flex: 1;
+    padding: 12px 24px;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--gray-700);
+    background: none;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: all var(--transition-speed) ease;
+}
+
+.calculation-tabs .tab-btn:hover {
+    background-color: var(--gray-200);
+    color: var(--primary-color);
+}
+
+.calculation-tabs .tab-btn.active {
+    background-color: white;
+    color: var(--primary-color);
+    box-shadow: var(--box-shadow);
+}
+
+/* Fix calculation results */
+.calculation-results {
+    margin-top: 24px;
+    padding: 24px;
+    background-color: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+}
+
+.calculation-results h3 {
+    color: var(--primary-color);
+    margin-bottom: 16px;
+}
+
+.result-section {
+    margin-bottom: 24px;
+    padding: 16px;
+    background-color: var(--gray-100);
+    border-radius: var(--border-radius);
+}
+
+.result-section:last-child {
+    margin-bottom: 0;
+}
+
+.result-section h4 {
+    color: var(--primary-color);
+    margin-bottom: 12px;
+}
+
+.result-section ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.result-section li {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.result-section li:last-child {
+    border-bottom: none;
+}
+
+.calculation-actions {
+    margin-top: 24px;
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.btn-send-to-cost {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 8px 16px;
+    border-radius: var(--border-radius);
+    border: none;
+    cursor: pointer;
+    transition: all var(--transition-speed) ease;
+}
+
+.btn-send-to-cost:hover {
+    background-color: var(--primary-dark);
 }

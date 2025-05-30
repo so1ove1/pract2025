@@ -785,59 +785,71 @@ async function saveCalculation() {
  */
 function printCalculation() {
     if (calculationResults.length === 0) {
-        alert('Нет данных для печати');
+        alert('Добавьте хотя бы один материал для печати расчета');
         return;
     }
 
     const calculationName = document.getElementById('calculationMaterialName').value || 'Расчет материалов';
     const totalAmount = calculationResults.reduce((sum, item) => sum + item.total, 0);
 
-    const printContent = `
+    // Создаем содержимое для печати
+    let printContent = `
         <html>
         <head>
-            <title>${calculationName}</title>
+            <title>Расчет материалов - ${calculationName}</title>
             <style>
                 body { font-family: Arial, sans-serif; margin: 20px; }
                 h1 { color: #2B5DA2; }
                 table { width: 100%; border-collapse: collapse; margin: 20px 0; }
                 th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
                 th { background-color: #f2f2f2; }
-                .total { font-weight: bold; }
+                .text-right { text-align: right; }
+                .company-info { margin-bottom: 20px; }
             </style>
         </head>
         <body>
-            <h1>${calculationName}</h1>
+            <div class="company-info">
+                <h1>«Братск Профиль»</h1>
+                <p>Расчет стоимости материалов</p>
+            </div>
+            
+            <h2>${calculationName}</h2>
+            
             <table>
                 <thead>
                     <tr>
                         <th>№</th>
-                        <th>Материал</th>
-                        <th>Ед. изм.</th>
+                        <th>Название материала</th>
                         <th>Длина, м</th>
-                        <th>Количество</th>
+                        <th>Кол-во, шт</th>
                         <th>Цена за м², ₽</th>
-                        <th>Цена за шт., ₽</th>
                         <th>Сумма, ₽</th>
                     </tr>
                 </thead>
                 <tbody>
-                    ${calculationResults.map((item, index) => `
-                        <tr>
-                            <td>${index + 1}</td>
-                            <td>${item.name}</td>
-                            <td>${item.unit}</td>
-                            <td>${item.length}</td>
-                            <td>${item.quantity}</td>
-                            <td>${formatCurrency(item.pricePerM2)}</td>
-                            <td>${formatCurrency(item.price)}</td>
-                            <td>${formatCurrency(item.total)}</td>
-                        </tr>
-                    `).join('')}
+    `;
+
+    // Добавляем строки материалов
+    calculationResults.forEach((item, index) => {
+        printContent += `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${item.name}</td>
+                <td>${item.length}</td>
+                <td>${item.quantity}</td>
+                <td>${formatCurrency(item.price)}</td>
+                <td>${formatCurrency(item.total)}</td>
+            </tr>
+        `;
+    });
+
+    // Добавляем итоговую сумму
+    printContent += `
                 </tbody>
                 <tfoot>
                     <tr>
-                        <td colspan="7" class="total">Итого:</td>
-                        <td class="total">${formatCurrency(totalAmount)} ₽</td>
+                        <td colspan="5" class="text-right"><strong>Итого:</strong></td>
+                        <td><strong>${formatCurrency(totalAmount)}</strong></td>
                     </tr>
                 </tfoot>
             </table>
@@ -845,10 +857,12 @@ function printCalculation() {
         </html>
     `;
 
+    // Открываем новое окно для печати
     const printWindow = window.open('', '_blank');
     printWindow.document.write(printContent);
     printWindow.document.close();
 
+    // Запускаем печать
     setTimeout(() => {
         printWindow.print();
     }, 500);
