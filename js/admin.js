@@ -38,6 +38,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Инициализация кнопок
     setupButtons();
+
+    // Инициализация фильтров прайс-листа
+    setupPricelistFilters();
 });
 
 /**
@@ -68,6 +71,95 @@ function setupAdminTabs() {
                 targetPane.classList.add('active');
             }
         });
+    });
+}
+
+/**
+ * Настройка фильтров прайс-листа
+ */
+function setupPricelistFilters() {
+    const categorySelect = document.getElementById('pricelistCategory');
+    const searchInput = document.getElementById('pricelistSearch');
+
+    if (categorySelect) {
+        categorySelect.addEventListener('change', filterPricelist);
+        // Заполняем категории
+        categorySelect.innerHTML = '<option value="">Все категории</option>' +
+            categories.map(category => 
+                `<option value="${category.id}">${category.name}</option>`
+            ).join('');
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', filterPricelist);
+    }
+}
+
+/**
+ * Фильтрация прайс-листа
+ */
+function filterPricelist() {
+    const categoryId = document.getElementById('pricelistCategory').value;
+    const searchTerm = document.getElementById('pricelistSearch').value.toLowerCase();
+
+    const filteredPricelist = pricelist.filter(item => {
+        const matchesCategory = !categoryId || item.material.category_id === parseInt(categoryId);
+        const matchesSearch = !searchTerm || 
+            item.materialName.toLowerCase().includes(searchTerm) ||
+            item.coating.toLowerCase().includes(searchTerm);
+        return matchesCategory && matchesSearch;
+    });
+
+    displayPricelist(filteredPricelist);
+}
+
+/**
+ * Отображение отфильтрованного прайс-листа
+ */
+function displayPricelist(items) {
+    const tbody = document.getElementById('pricelistTableBody');
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+
+    if (items.length === 0) {
+        tbody.innerHTML = `
+            <tr><td colspan="7" class="text-center">Прайс-лист пуст</td></tr>
+        `;
+        return;
+    }
+
+    items.forEach(item => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${item.categoryName}</td>
+            <td>${item.materialName}</td>
+            <td>${item.coating}</td>
+            <td>${item.thickness}</td>
+            <td>${formatCurrency(item.price)} ₽</td>
+            <td>${formatDate(item.date)}</td>
+            <td class="actions-cell">
+                <button class="btn btn-sm btn-primary edit-price" title="Редактировать">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-sm btn-danger delete-price" title="Удалить">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
+
+        const editBtn = row.querySelector('.edit-price');
+        const deleteBtn = row.querySelector('.delete-price');
+
+        if (editBtn) {
+            editBtn.addEventListener('click', () => editPrice(item));
+        }
+
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', () => deletePrice(item.id));
+        }
+
+        tbody.appendChild(row);
     });
 }
 
@@ -132,6 +224,14 @@ async function loadCategories() {
             
             categoriesList.appendChild(item);
         });
+
+        // Обновляем селект категорий в форме материалов
+        const materialCategorySelect = document.getElementById('materialCategory');
+        if (materialCategorySelect) {
+            materialCategorySelect.innerHTML = categories.map(category =>
+                `<option value="${category.id}">${category.name}</option>`
+            ).join('');
+        }
     } catch (error) {
         console.error('Ошибка при загрузке категорий:', error);
     }
@@ -200,51 +300,7 @@ async function loadMaterials(categoryId = null) {
 async function loadPricelist() {
     try {
         pricelist = await api.prices.getAll();
-        const pricelistTableBody = document.getElementById('pricelistTableBody');
-        
-        if (!pricelistTableBody) return;
-        
-        pricelistTableBody.innerHTML = '';
-        
-        if (pricelist.length === 0) {
-            pricelistTableBody.innerHTML = `
-                <tr><td colspan="7" class="text-center">Прайс-лист пуст</td></tr>
-            `;
-            return;
-        }
-        
-        pricelist.forEach(item => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${item.categoryName}</td>
-                <td>${item.materialName}</td>
-                <td>${item.coating}</td>
-                <td>${item.thickness}</td>
-                <td>${formatCurrency(item.price)} ₽</td>
-                <td>${formatDate(item.date)}</td>
-                <td class="actions-cell">
-                    <button class="btn btn-sm btn-primary edit-price" title="Редактировать">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn btn-sm btn-danger delete-price" title="Удалить">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </td>
-            `;
-            
-            const editBtn = row.querySelector('.edit-price');
-            const deleteBtn = row.querySelector('.delete-price');
-            
-            if (editBtn) {
-                editBtn.addEventListener('click', () => editPrice(item));
-            }
-            
-            if (deleteBtn) {
-                deleteBtn.addEventListener('click', () => deletePrice(item.id));
-            }
-            
-            pricelistTableBody.appendChild(row);
-        });
+        displayPricelist(pricelist);
     } catch (error) {
         console.error('Ошибка при загрузке прайс-листа:', error);
     }
@@ -385,8 +441,11 @@ function setupModals() {
 
             try {
                 if (currentUserId) {
-                    // Обновление пользователя не реализовано в API
-                    alert('Обновление пользователя не поддерживается в текущей версии');
+                    await api.auth.updateUser(currentUserId, formData);
+                    userModal.style.display = 'none';
+                    userForm.reset();
+                    await loadUsers();
+                    alert('Пользователь обновлен');
                 } else {
                     await api.auth.createUser(formData);
                     userModal.style.display = 'none';
@@ -407,6 +466,15 @@ function setupModals() {
                 userForm.reset();
                 currentUserId = null;
             });
+        });
+    }
+
+    // Модальное окно для цен
+    const addPriceItemBtn = document.getElementById('addPriceItemBtn');
+    if (addPriceItemBtn) {
+        addPriceItemBtn.addEventListener('click', () => {
+            // TODO: Implement price modal
+            alert('Функция добавления цены будет доступна в следующей версии');
         });
     }
 }
