@@ -344,7 +344,8 @@ function updateMaterialSubtypes(section, materialType) {
             `<option value="${m.id}">${m.name}</option>`
         ).join('');
 
-        updateCoatingOptions(section);
+        // Важно: вызываем updateCoatingOptions после обновления подтипов
+        setTimeout(() => updateCoatingOptions(section), 0);
     }
 }
 
@@ -810,7 +811,8 @@ function printCalculation() {
         <body>
             <div class="company-info">
                 <h1>«Братск Профиль»</h1>
-                <p>Расчет стоимости материалов</p>
+                <p>Расч
+ет стоимости материалов</p>
             </div>
             
             <h2>${calculationName}</h2>
