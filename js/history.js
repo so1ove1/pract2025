@@ -14,7 +14,10 @@ const typeDisplayNames = {
     'calculation-cost': 'Расчет стоимости',
     'calculation-fence': 'Расчет забора',
     'calculation-roof': 'Расчет крыши',
-    'calculation-siding': 'Расчет обшивки'
+    'calculation-siding': 'Расчет обшивки',
+    'materials-fence': 'Расчет забора',
+    'materials-roof': 'Расчет крыши',
+    'materials-siding': 'Расчет обшивки'
 };
 
 document.addEventListener('DOMContentLoaded', async () => {

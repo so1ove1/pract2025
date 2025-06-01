@@ -23,7 +23,7 @@ async function fetchAPI(endpoint, options = {}) {
     };
 
     const url = `${API_URL}${endpoint}`;
-    console.log(`🚀 API Request to: ${url}`, {
+    console.log(`API Request to: ${url}`, {
         method: options.method || 'GET',
         headers: { ...defaultOptions.headers, ...options.headers }
     });
@@ -34,7 +34,7 @@ async function fetchAPI(endpoint, options = {}) {
             ...options
         });
 
-        console.log('📨 Response Headers:', {
+        console.log('Response Headers:', {
             contentType: response.headers.get('content-type'),
             status: response.status,
             statusText: response.statusText
@@ -60,7 +60,7 @@ async function fetchAPI(endpoint, options = {}) {
 
         return data;
     } catch (error) {
-        console.error('🔥 API Error:', error);
+        console.error('API Error:', error);
         throw error;
     }
 }

@@ -274,8 +274,9 @@ function initMaterialTypeHandlers() {
  * Обновление опций покрытия
  */
 function updateCoatingOptions(section) {
-    const materialSelect = document.getElementById(`${section}Type`) ||
-        document.getElementById(`${section}Subtype`);
+    const materialSelect = document.getElementById(`${section}Subtype`) ||
+        document.getElementById(`${section}Type`);
+
     const coatingSelect = document.getElementById(`${section}Coating`);
 
     if (!materialSelect || !coatingSelect) return;
@@ -675,12 +676,12 @@ function updateResultsTable() {
         input.addEventListener('change', () => {
             const index = parseInt(input.getAttribute('data-index'));
             const length = parseFloat(input.value);
-            
+
             if (length <= 0 || isNaN(length)) {
                 input.value = calculationResults[index].length;
                 return;
             }
-            
+
             calculationResults[index].length = length;
             calculationResults[index].price = calculationResults[index].pricePerM2 * calculationResults[index].overallWidth * length;
             calculationResults[index].total = calculationResults[index].price * calculationResults[index].quantity;
@@ -692,12 +693,12 @@ function updateResultsTable() {
         input.addEventListener('change', () => {
             const index = parseInt(input.getAttribute('data-index'));
             const quantity = parseInt(input.value);
-            
+
             if (quantity <= 0 || isNaN(quantity)) {
                 input.value = calculationResults[index].quantity;
                 return;
             }
-            
+
             calculationResults[index].quantity = quantity;
             calculationResults[index].total = calculationResults[index].price * quantity;
             updateResultsTable();
@@ -708,12 +709,12 @@ function updateResultsTable() {
         input.addEventListener('change', () => {
             const index = parseInt(input.getAttribute('data-index'));
             const price = parseFloat(input.value);
-            
+
             if (price <= 0 || isNaN(price)) {
                 input.value = calculationResults[index].pricePerM2;
                 return;
             }
-            
+
             calculationResults[index].pricePerM2 = price;
             calculationResults[index].price = price * calculationResults[index].overallWidth * calculationResults[index].length;
             calculationResults[index].total = calculationResults[index].price * calculationResults[index].quantity;
@@ -811,8 +812,7 @@ function printCalculation() {
         <body>
             <div class="company-info">
                 <h1>«Братск Профиль»</h1>
-                <p>Расч
-ет стоимости материалов</p>
+                <p>Расчет стоимости материалов</p>
             </div>
             
             <h2>${calculationName}</h2>
