@@ -57,11 +57,6 @@ function setupAdminTabs() {
     const tabs = document.querySelectorAll('.admin-tabs .tab-btn');
     const panes = document.querySelectorAll('.tab-pane');
     
-    if (!tabs.length || !panes.length) {
-        console.warn('Элементы вкладок не найдены');
-        return;
-    }
-    
     tabs.forEach(tab => {
         tab.addEventListener('click', () => {
             tabs.forEach(t => t.classList.remove('active'));
@@ -84,12 +79,8 @@ async function loadCategories() {
         categories = await api.categories.getAll();
         const categoriesList = document.getElementById('categoriesList');
         
-        if (!categoriesList) {
-            console.warn('Элемент списка категорий не найден');
-            return;
-        }
+        if (!categoriesList) return;
         
-        // Очищаем список
         categoriesList.innerHTML = '';
         
         // Добавляем элемент "Все категории"
@@ -117,20 +108,18 @@ async function loadCategories() {
             
             item.setAttribute('data-category-id', category.id);
             
-            // Добавляем обработчик клика на весь элемент
             const categoryName = item.querySelector('.category-name');
             if (categoryName) {
                 categoryName.addEventListener('click', () => selectCategory(category.id));
             }
             
-            // Добавляем обработчики для кнопок
             const editBtn = item.querySelector('.edit-category');
             const deleteBtn = item.querySelector('.delete-category');
             
             if (editBtn) {
                 editBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    editCategory(category.id);
+                    editCategory(category);
                 });
             }
             
@@ -157,15 +146,10 @@ async function loadMaterials(categoryId = null) {
         materials = await api.materials.getAll(params);
         
         const materialsTableBody = document.getElementById('materialsTableBody');
-        if (!materialsTableBody) {
-            console.warn('Элемент таблицы материалов не найден');
-            return;
-        }
+        if (!materialsTableBody) return;
         
-        // Очищаем таблицу
         materialsTableBody.innerHTML = '';
         
-        // Если нет материалов
         if (materials.length === 0) {
             materialsTableBody.innerHTML = `
                 <tr><td colspan="5" class="text-center">Нет материалов</td></tr>
@@ -173,9 +157,8 @@ async function loadMaterials(categoryId = null) {
             return;
         }
         
-        // Добавляем материалы в таблицу
         materials.forEach(material => {
-            const category = categories.find(c => c.id === material.categoryId);
+            const category = categories.find(c => c.id === material.category_id);
             
             const row = document.createElement('tr');
             row.innerHTML = `
@@ -193,12 +176,11 @@ async function loadMaterials(categoryId = null) {
                 </td>
             `;
             
-            // Добавляем обработчики для кнопок
             const editBtn = row.querySelector('.edit-material');
             const deleteBtn = row.querySelector('.delete-material');
             
             if (editBtn) {
-                editBtn.addEventListener('click', () => editMaterial(material.id));
+                editBtn.addEventListener('click', () => editMaterial(material));
             }
             
             if (deleteBtn) {
@@ -220,15 +202,10 @@ async function loadPricelist() {
         pricelist = await api.prices.getAll();
         const pricelistTableBody = document.getElementById('pricelistTableBody');
         
-        if (!pricelistTableBody) {
-            console.warn('Элемент таблицы прайс-листа не найден');
-            return;
-        }
+        if (!pricelistTableBody) return;
         
-        // Очищаем таблицу
         pricelistTableBody.innerHTML = '';
         
-        // Если нет позиций
         if (pricelist.length === 0) {
             pricelistTableBody.innerHTML = `
                 <tr><td colspan="7" class="text-center">Прайс-лист пуст</td></tr>
@@ -236,7 +213,6 @@ async function loadPricelist() {
             return;
         }
         
-        // Добавляем позиции в таблицу
         pricelist.forEach(item => {
             const row = document.createElement('tr');
             row.innerHTML = `
@@ -256,12 +232,11 @@ async function loadPricelist() {
                 </td>
             `;
             
-            // Добавляем обработчики для кнопок
             const editBtn = row.querySelector('.edit-price');
             const deleteBtn = row.querySelector('.delete-price');
             
             if (editBtn) {
-                editBtn.addEventListener('click', () => editPrice(item.id));
+                editBtn.addEventListener('click', () => editPrice(item));
             }
             
             if (deleteBtn) {
@@ -283,15 +258,10 @@ async function loadUsers() {
         users = await api.auth.getUsers();
         const usersTableBody = document.getElementById('usersTableBody');
         
-        if (!usersTableBody) {
-            console.warn('Элемент таблицы пользователей не найден');
-            return;
-        }
+        if (!usersTableBody) return;
         
-        // Очищаем таблицу
         usersTableBody.innerHTML = '';
         
-        // Если нет пользователей
         if (users.length === 0) {
             usersTableBody.innerHTML = `
                 <tr><td colspan="5" class="text-center">Нет пользователей</td></tr>
@@ -299,7 +269,6 @@ async function loadUsers() {
             return;
         }
         
-        // Добавляем пользователей в таблицу
         users.forEach(user => {
             const row = document.createElement('tr');
             row.innerHTML = `
@@ -317,12 +286,11 @@ async function loadUsers() {
                 </td>
             `;
             
-            // Добавляем обработчики для кнопок
             const editBtn = row.querySelector('.edit-user');
             const deleteBtn = row.querySelector('.delete-user');
             
             if (editBtn) {
-                editBtn.addEventListener('click', () => editUser(user.id));
+                editBtn.addEventListener('click', () => editUser(user));
             }
             
             if (deleteBtn) {
@@ -340,46 +308,105 @@ async function loadUsers() {
  * Настройка модальных окон
  */
 function setupModals() {
-    const addUserModal = document.getElementById('userModal');
-    const addUserForm = document.getElementById('userForm');
+    // Модальное окно для категорий
+    const addCategoryBtn = document.getElementById('addMaterialCategoryBtn');
+    if (addCategoryBtn) {
+        addCategoryBtn.addEventListener('click', () => {
+            const categoryName = prompt('Введите название категории:');
+            if (categoryName) {
+                createCategory(categoryName);
+            }
+        });
+    }
+
+    // Модальное окно для материалов
+    const materialModal = document.getElementById('materialModal');
+    const materialForm = document.getElementById('materialForm');
+    const closeMaterialModalBtn = document.getElementById('closeMaterialModalBtn');
+    const cancelMaterialBtn = document.getElementById('cancelMaterialBtn');
+    const saveMaterialBtn = document.getElementById('saveMaterialBtn');
+    
+    if (materialModal && materialForm && closeMaterialModalBtn && cancelMaterialBtn && saveMaterialBtn) {
+        // Обработчик сохранения материала
+        saveMaterialBtn.addEventListener('click', async () => {
+            const formData = {
+                name: document.getElementById('materialName').value,
+                code: document.getElementById('materialCode').value,
+                unit: document.getElementById('materialUnit').value,
+                category_id: parseInt(document.getElementById('materialCategory').value),
+                overall_width: parseFloat(document.getElementById('materialOverallWidth').value),
+                working_width: parseFloat(document.getElementById('materialWorkingWidth').value)
+            };
+
+            try {
+                if (currentMaterialId) {
+                    await api.materials.update(currentMaterialId, formData);
+                } else {
+                    await api.materials.create(formData);
+                }
+                
+                materialModal.style.display = 'none';
+                materialForm.reset();
+                currentMaterialId = null;
+                await loadMaterials();
+                alert(currentMaterialId ? 'Материал обновлен' : 'Материал создан');
+            } catch (error) {
+                console.error('Ошибка при сохранении материала:', error);
+                alert(error.message || 'Ошибка при сохранении материала');
+            }
+        });
+
+        // Обработчики закрытия
+        [closeMaterialModalBtn, cancelMaterialBtn].forEach(btn => {
+            btn.addEventListener('click', () => {
+                materialModal.style.display = 'none';
+                materialForm.reset();
+                currentMaterialId = null;
+            });
+        });
+    }
+
+    // Модальное окно для пользователей
+    const userModal = document.getElementById('userModal');
+    const userForm = document.getElementById('userForm');
     const closeUserModalBtn = document.getElementById('closeUserModalBtn');
     const cancelUserBtn = document.getElementById('cancelUserBtn');
+    const saveUserBtn = document.getElementById('saveUserBtn');
     
-    if (addUserModal && addUserForm && closeUserModalBtn && cancelUserBtn) {
-        addUserForm.addEventListener('submit', async (event) => {
-            event.preventDefault();
-            
-            const login = document.getElementById('userLogin').value;
-            const name = document.getElementById('userName').value;
-            const password = document.getElementById('userPassword').value;
-            const role = document.getElementById('userRole').value;
-            
+    if (userModal && userForm && closeUserModalBtn && cancelUserBtn && saveUserBtn) {
+        // Обработчик сохранения пользователя
+        saveUserBtn.addEventListener('click', async () => {
+            const formData = {
+                login: document.getElementById('userLogin').value,
+                name: document.getElementById('userName').value,
+                password: document.getElementById('userPassword').value,
+                role: document.getElementById('userRole').value
+            };
+
             try {
                 if (currentUserId) {
+                    // Обновление пользователя не реализовано в API
                     alert('Обновление пользователя не поддерживается в текущей версии');
                 } else {
-                    await api.auth.createUser({ login, name, password, role });
-                    alert('Пользователь успешно создан');
+                    await api.auth.createUser(formData);
+                    userModal.style.display = 'none';
+                    userForm.reset();
                     await loadUsers();
-                    addUserModal.style.display = 'none';
-                    addUserForm.reset();
+                    alert('Пользователь создан');
                 }
             } catch (error) {
                 console.error('Ошибка при сохранении пользователя:', error);
                 alert(error.message || 'Ошибка при сохранении пользователя');
             }
         });
-        
-        closeUserModalBtn.addEventListener('click', () => {
-            addUserModal.style.display = 'none';
-            addUserForm.reset();
-            currentUserId = null;
-        });
-        
-        cancelUserBtn.addEventListener('click', () => {
-            addUserModal.style.display = 'none';
-            addUserForm.reset();
-            currentUserId = null;
+
+        // Обработчики закрытия
+        [closeUserModalBtn, cancelUserBtn].forEach(btn => {
+            btn.addEventListener('click', () => {
+                userModal.style.display = 'none';
+                userForm.reset();
+                currentUserId = null;
+            });
         });
     }
 }
@@ -388,37 +415,69 @@ function setupModals() {
  * Настройка кнопок
  */
 function setupButtons() {
+    const addMaterialBtn = document.getElementById('addMaterialBtn');
+    if (addMaterialBtn) {
+        addMaterialBtn.addEventListener('click', () => {
+            currentMaterialId = null;
+            const materialModal = document.getElementById('materialModal');
+            const materialModalTitle = document.getElementById('materialModalTitle');
+            if (materialModal && materialModalTitle) {
+                materialModalTitle.textContent = 'Добавление материала';
+                materialModal.style.display = 'block';
+            }
+        });
+    }
+
     const addUserBtn = document.getElementById('addUserBtn');
     if (addUserBtn) {
         addUserBtn.addEventListener('click', () => {
-            const addUserModal = document.getElementById('userModal');
-            if (addUserModal) {
-                addUserModal.style.display = 'block';
+            currentUserId = null;
+            const userModal = document.getElementById('userModal');
+            const userModalTitle = document.getElementById('userModalTitle');
+            if (userModal && userModalTitle) {
+                userModalTitle.textContent = 'Добавление пользователя';
+                userModal.style.display = 'block';
             }
         });
     }
 }
 
 /**
- * Выбор категории
+ * Создание категории
  */
-function selectCategory(categoryId) {
-    const items = document.querySelectorAll('#categoriesList li');
-    items.forEach(item => item.classList.remove('active'));
-    
-    const selectedItem = document.querySelector(`#categoriesList li[data-category-id="${categoryId}"]`);
-    if (selectedItem) {
-        selectedItem.classList.add('active');
+async function createCategory(name) {
+    try {
+        await api.categories.create({ name });
+        await loadCategories();
+        alert('Категория создана');
+    } catch (error) {
+        console.error('Ошибка при создании категории:', error);
+        alert(error.message || 'Ошибка при создании категории');
     }
-    
-    loadMaterials(categoryId);
 }
 
 /**
  * Редактирование категории
  */
-function editCategory(id) {
-    alert('Редактирование категории не реализовано');
+function editCategory(category) {
+    const newName = prompt('Введите новое название категории:', category.name);
+    if (newName && newName !== category.name) {
+        updateCategory(category.id, newName);
+    }
+}
+
+/**
+ * Обновление категории
+ */
+async function updateCategory(id, name) {
+    try {
+        await api.categories.update(id, { name });
+        await loadCategories();
+        alert('Категория обновлена');
+    } catch (error) {
+        console.error('Ошибка при обновлении категории:', error);
+        alert(error.message || 'Ошибка при обновлении категории');
+    }
 }
 
 /**
@@ -439,10 +498,41 @@ async function deleteCategory(id) {
 }
 
 /**
+ * Выбор категории
+ */
+function selectCategory(categoryId) {
+    const items = document.querySelectorAll('#categoriesList li');
+    items.forEach(item => item.classList.remove('active'));
+    
+    const selectedItem = document.querySelector(`#categoriesList li[data-category-id="${categoryId}"]`);
+    if (selectedItem) {
+        selectedItem.classList.add('active');
+    }
+    
+    loadMaterials(categoryId);
+}
+
+/**
  * Редактирование материала
  */
-function editMaterial(id) {
-    alert('Редактирование материала не реализовано');
+function editMaterial(material) {
+    currentMaterialId = material.id;
+    const materialModal = document.getElementById('materialModal');
+    const materialModalTitle = document.getElementById('materialModalTitle');
+    
+    if (materialModal && materialModalTitle) {
+        materialModalTitle.textContent = 'Редактирование материала';
+        
+        // Заполняем форму данными
+        document.getElementById('materialName').value = material.name;
+        document.getElementById('materialCode').value = material.code;
+        document.getElementById('materialUnit').value = material.unit;
+        document.getElementById('materialCategory').value = material.category_id;
+        document.getElementById('materialOverallWidth').value = material.overall_width || '';
+        document.getElementById('materialWorkingWidth').value = material.working_width || '';
+        
+        materialModal.style.display = 'block';
+    }
 }
 
 /**
@@ -464,8 +554,25 @@ async function deleteMaterial(id) {
 /**
  * Редактирование цены
  */
-function editPrice(id) {
-    alert('Редактирование цены не реализовано');
+function editPrice(price) {
+    const newPrice = prompt('Введите новую цену:', price.price);
+    if (newPrice && !isNaN(newPrice)) {
+        updatePrice(price.id, parseFloat(newPrice));
+    }
+}
+
+/**
+ * Обновление цены
+ */
+async function updatePrice(id, price) {
+    try {
+        await api.prices.update(id, { price });
+        await loadPricelist();
+        alert('Цена обновлена');
+    } catch (error) {
+        console.error('Ошибка при обновлении цены:', error);
+        alert(error.message || 'Ошибка при обновлении цены');
+    }
 }
 
 /**
@@ -487,8 +594,22 @@ async function deletePrice(id) {
 /**
  * Редактирование пользователя
  */
-function editUser(id) {
-    alert('Редактирование пользователя не реализовано');
+function editUser(user) {
+    currentUserId = user.id;
+    const userModal = document.getElementById('userModal');
+    const userModalTitle = document.getElementById('userModalTitle');
+    
+    if (userModal && userModalTitle) {
+        userModalTitle.textContent = 'Редактирование пользователя';
+        
+        // Заполняем форму данными
+        document.getElementById('userLogin').value = user.login;
+        document.getElementById('userName').value = user.name;
+        document.getElementById('userRole').value = user.role;
+        document.getElementById('userPassword').value = '';
+        
+        userModal.style.display = 'block';
+    }
 }
 
 /**
