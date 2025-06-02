@@ -262,7 +262,7 @@ async function recalculatePrice(calculationId) {
             const currentPrice = priceList.find(p => p.id === item.priceId);
             if (currentPrice && currentPrice.price !== item.price) {
                 updated = true;
-                const newTotal = currentPrice.price * item.quantity * (item.length || 1);
+                const newTotal = currentPrice.price * item.quantity * (item.length || 1) * (item.overallWidth || 1);
                 totalAmount += newTotal;
                 return {
                     ...item,
