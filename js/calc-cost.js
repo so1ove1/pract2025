@@ -384,13 +384,13 @@ async function saveCalculation() {
         
         const calculationData = {
             name: calculationName,
-            type: 'calculation-cost', // Changed from 'cost' to 'calculation-cost'
+            type: 'calculation-cost',
             amount: totalAmount,
             details: {
                 items: itemsData.map(item => ({
                     materialId: item.materialId,
                     priceId: item.priceId,
-                    name: item.name,
+                    name: `${item.name} (${item.coating}, ${item.thickness} мм)`,
                     length: item.length,
                     quantity: item.quantity,
                     price: item.price,
