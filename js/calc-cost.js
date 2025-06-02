@@ -196,6 +196,7 @@ function addMaterialToCalculation(materialData) {
         ...materialData,
         length: 1, // Длина в метрах
         quantity: 1, // Количество листов
+        pricePerPiece: calculatePricePerPiece(materialData.price, 1, materialData.overallWidth || 1),
         total: calculateItemTotal(materialData.price, 1, materialData.overallWidth || 1, 1)
     };
     
@@ -206,15 +207,18 @@ function addMaterialToCalculation(materialData) {
 }
 
 /**
+ * Расчет цены за штуку
+ */
+function calculatePricePerPiece(price, length, overallWidth) {
+    return price * overallWidth * length;
+}
+
+/**
  * Расчет стоимости для одной позиции
- * @param {number} price - Цена за м²
- * @param {number} length - Длина в метрах
- * @param {number} overallWidth - Габаритная ширина в метрах
- * @param {number} quantity - Количество листов
- * @returns {number} - Итоговая стоимость
  */
 function calculateItemTotal(price, length, overallWidth, quantity) {
-    return price * overallWidth * length * quantity;
+    const pricePerPiece = calculatePricePerPiece(price, length, overallWidth);
+    return pricePerPiece * quantity;
 }
 
 /**
@@ -233,7 +237,7 @@ function updateCalculationTable() {
     if (itemsData.length === 0) {
         const emptyRow = document.createElement('tr');
         emptyRow.innerHTML = `
-            <td colspan="8" class="text-center">Нет добавленных товаров</td>
+            <td colspan="9" class="text-center">Нет добавленных товаров</td>
         `;
         tableBody.appendChild(emptyRow);
         totalAmountElement.textContent = '0.00 ₽';
@@ -246,8 +250,9 @@ function updateCalculationTable() {
     itemsData.forEach((item, index) => {
         const row = document.createElement('tr');
         
-        // Обновляем итоговую сумму для товара
-        item.total = calculateItemTotal(item.price, item.length, item.overallWidth, item.quantity);
+        // Обновляем цену за штуку и итоговую сумму для товара
+        item.pricePerPiece = calculatePricePerPiece(item.price, item.length, item.overallWidth);
+        item.total = item.pricePerPiece * item.quantity;
         totalAmount += item.total;
         
         row.innerHTML = `
@@ -266,6 +271,7 @@ function updateCalculationTable() {
                 <input type="number" class="price-input" value="${item.price}" 
                     min="0.01" step="0.01" data-index="${index}">
             </td>
+            <td>${formatCurrency(item.pricePerPiece)} ₽</td>
             <td>${formatCurrency(item.total)} ₽</td>
             <td class="actions-cell">
                 <button class="btn btn-sm btn-info btn-copy" data-index="${index}" title="Копировать">
@@ -394,6 +400,7 @@ async function saveCalculation() {
                     length: item.length,
                     quantity: item.quantity,
                     price: item.price,
+                    pricePerPiece: item.pricePerPiece,
                     total: item.total
                 }))
             }
@@ -453,10 +460,11 @@ function printCalculation() {
                 <thead>
                     <tr>
                         <th>№</th>
-                        <th>Название материала</th>
+                        <th>Материал</th>
                         <th>Длина, м</th>
-                        <th>Кол-во, шт</th>
+                        <th>Количество</th>
                         <th>Цена за м², ₽</th>
+                        <th>Цена за шт., ₽</th>
                         <th>Сумма, ₽</th>
                     </tr>
                 </thead>
@@ -472,6 +480,7 @@ function printCalculation() {
                 <td>${item.length}</td>
                 <td>${item.quantity}</td>
                 <td>${formatCurrency(item.price)}</td>
+                <td>${formatCurrency(item.pricePerPiece)}</td>
                 <td>${formatCurrency(item.total)}</td>
             </tr>
         `;
@@ -482,7 +491,7 @@ function printCalculation() {
                 </tbody>
                 <tfoot>
                     <tr>
-                        <td colspan="5" class="text-right"><strong>Итого:</strong></td>
+                        <td colspan="6" class="text-right"><strong>Итого:</strong></td>
                         <td><strong>${formatCurrency(totalAmount)} ₽</strong></td>
                     </tr>
                 </tfoot>
