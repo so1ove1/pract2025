@@ -201,10 +201,13 @@ function displayHistoryData() {
             <td>${typeDisplayNames[item.type] || 'Неизвестный тип'}</td>
             <td>${formatCurrency(item.amount)} ₽</td>
             <td>
-                <button class="btn btn-primary btn-sm view-calculation" data-id="${item.id}">
+                <button class="btn btn-primary btn-sm view-calculation" data-id="${item.id}" title="Просмотр">
                     <i class="fas fa-eye"></i>
                 </button>
-                <button class="btn btn-danger btn-sm delete-calculation" data-id="${item.id}">
+                <button class="btn btn-success btn-sm recalculate-btn" data-id="${item.id}" title="Пересчитать">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+                <button class="btn btn-danger btn-sm delete-calculation" data-id="${item.id}" title="Удалить">
                     <i class="fas fa-trash"></i>
                 </button>
             </td>
@@ -212,9 +215,10 @@ function displayHistoryData() {
         tbody.appendChild(row);
     });
 
-    // Добавляем обработчики для кнопок просмотра и удаления
+    // Добавляем обработчики для кнопок
     const viewButtons = tbody.querySelectorAll('.view-calculation');
     const deleteButtons = tbody.querySelectorAll('.delete-calculation');
+    const recalculateButtons = tbody.querySelectorAll('.recalculate-btn');
 
     viewButtons.forEach(button => {
         button.addEventListener('click', () => {
@@ -230,7 +234,80 @@ function displayHistoryData() {
         });
     });
 
+    recalculateButtons.forEach(button => {
+        button.addEventListener('click', async () => {
+            const calculationId = parseInt(button.getAttribute('data-id'));
+            await recalculatePrice(calculationId);
+        });
+    });
+
     updatePagination();
+}
+
+/**
+ * Пересчет стоимости с актуальными ценами
+ */
+async function recalculatePrice(calculationId) {
+    try {
+        const calculation = historyData.find(item => item.id === calculationId);
+        if (!calculation) return;
+
+        // Получаем актуальный прайс-лист
+        const priceList = await api.prices.getAll();
+        let totalAmount = 0;
+        let updated = false;
+
+        // Пересчитываем каждую позицию
+        const updatedItems = calculation.details.items.map(item => {
+            const currentPrice = priceList.find(p => p.id === item.priceId);
+            if (currentPrice && currentPrice.price !== item.price) {
+                updated = true;
+                const newTotal = currentPrice.price * item.quantity * (item.length || 1);
+                totalAmount += newTotal;
+                return {
+                    ...item,
+                    price: currentPrice.price,
+                    total: newTotal
+                };
+            } else {
+                totalAmount += item.total;
+                return item;
+            }
+        });
+
+        if (!updated) {
+            alert('Цены актуальны, пересчет не требуется');
+            return;
+        }
+
+        // Обновляем расчет
+        const updatedCalculation = {
+            ...calculation,
+            amount: totalAmount,
+            details: {
+                ...calculation.details,
+                items: updatedItems
+            }
+        };
+
+        // Сохраняем обновленный расчет
+        await api.calculations.update(calculationId, updatedCalculation);
+
+        // Обновляем данные в интерфейсе
+        const index = historyData.findIndex(item => item.id === calculationId);
+        if (index !== -1) {
+            historyData[index] = updatedCalculation;
+            filteredData = filteredData.map(item => 
+                item.id === calculationId ? updatedCalculation : item
+            );
+        }
+
+        displayHistoryData();
+        alert('Расчет успешно обновлен с актуальными ценами');
+    } catch (error) {
+        console.error('Ошибка при пересчете:', error);
+        alert(error.message || 'Ошибка при пересчете стоимости');
+    }
 }
 
 /**
