@@ -23,16 +23,16 @@ const typeDisplayNames = {
 document.addEventListener('DOMContentLoaded', async () => {
     // Загрузка данных
     await loadHistoryData();
-    
+
     // Инициализация кнопок фильтров
     const applyFiltersBtn = document.getElementById('applyFiltersBtn');
     const resetFiltersBtn = document.getElementById('resetFiltersBtn');
     const searchInput = document.getElementById('searchName');
-    
+
     if (applyFiltersBtn) {
         applyFiltersBtn.addEventListener('click', applyFilters);
     }
-    
+
     if (resetFiltersBtn) {
         resetFiltersBtn.addEventListener('click', resetFilters);
     }
@@ -43,25 +43,25 @@ document.addEventListener('DOMContentLoaded', async () => {
             applyFilters();
         });
     }
-    
+
     // Инициализация модального окна просмотра расчета
     const closeCalculationModalBtn = document.getElementById('closeCalculationModalBtn');
     const closeViewBtn = document.getElementById('closeViewBtn');
     const printCalculationBtn = document.getElementById('printCalculationBtn');
     const copyCalculationBtn = document.getElementById('copyCalculationBtn');
-    
+
     if (closeCalculationModalBtn) {
         closeCalculationModalBtn.addEventListener('click', closeCalculationModal);
     }
-    
+
     if (closeViewBtn) {
         closeViewBtn.addEventListener('click', closeCalculationModal);
     }
-    
+
     if (printCalculationBtn) {
         printCalculationBtn.addEventListener('click', printCalculationDetails);
     }
-    
+
     if (copyCalculationBtn) {
         copyCalculationBtn.addEventListener('click', copyCalculation);
     }
@@ -74,10 +74,10 @@ async function loadHistoryData() {
     try {
         // Получаем данные через API
         historyData = await api.calculations.getAll();
-        
+
         // Применяем начальные фильтры (без фильтров)
         filteredData = [...historyData];
-        
+
         // Отображаем данные
         displayHistoryData();
     } catch (error) {
@@ -122,7 +122,7 @@ function applyFilters() {
             fromDate.setHours(0, 0, 0, 0);
             if (itemDate < fromDate) return false;
         }
-        
+
         if (dateTo) {
             const itemDate = new Date(item.created_at);
             const toDate = new Date(dateTo);
@@ -148,7 +148,7 @@ function applyFilters() {
 
     // Сбрасываем на первую страницу
     currentPage = 1;
-    
+
     // Отображаем отфильтрованные данные
     displayHistoryData();
 }
@@ -163,7 +163,7 @@ function resetFilters() {
     document.getElementById('calculationType').value = '';
     document.getElementById('amountFrom').value = '';
     document.getElementById('amountTo').value = '';
-    
+
     filteredData = [...historyData];
     currentPage = 1;
     displayHistoryData();
@@ -250,24 +250,49 @@ function displayHistoryData() {
 async function recalculatePrice(calculationId) {
     try {
         const calculation = historyData.find(item => item.id === calculationId);
-        if (!calculation) return;
+        if (!calculation) {
+            throw new Error('Расчет не найден');
+        }
 
         // Получаем актуальный прайс-лист
         const priceList = await api.prices.getAll();
+
         let totalAmount = 0;
         let updated = false;
 
         // Пересчитываем каждую позицию
         const updatedItems = calculation.details.items.map(item => {
-            const currentPrice = priceList.find(p => p.id === item.priceId);
-            if (currentPrice && currentPrice.price !== item.price) {
+            const priceId = parseInt(item.priceId); // Приводим priceId к числу
+            console.log(`Processing item with priceId: ${priceId}`);
+            if (isNaN(priceId)) {
+                console.warn(`Некорректный priceId: ${item.priceId}`);
+                totalAmount += item.total;
+                return item;
+            }
+
+            const currentPrice = priceList.find(p => p.id === priceId);
+            if (!currentPrice) {
+                console.warn(`Цена для priceId ${priceId} не найдена в прайс-листе`);
+                totalAmount += item.total;
+                return item;
+            }
+
+            const pricePerM2 = currentPrice.price;
+            const length = item.length || 1;
+            const width = item.overallWidth || 1;
+            const quantity = item.quantity || 1;
+
+            // Проверяем, изменилась ли цена
+            if (pricePerM2 !== item.pricePerM2) {
                 updated = true;
-                const newTotal = currentPrice.price * item.quantity * (item.length || 1) * (item.overallWidth || 1);
+                const unitPrice = pricePerM2 * length * width; // Стоимость за единицу
+                const newTotal = pricePerM2 * quantity * length * width; // Общая стоимость
                 totalAmount += newTotal;
                 return {
                     ...item,
-                    price: currentPrice.price,
-                    total: newTotal
+                    pricePerM2, // Цена за м²
+                    price: unitPrice, // Цена за единицу (м² * длина * ширина)
+                    total: newTotal // Общая стоимость (м² * количество * длина * ширина)
                 };
             } else {
                 totalAmount += item.total;
@@ -276,7 +301,7 @@ async function recalculatePrice(calculationId) {
         });
 
         if (!updated) {
-            alert('Цены актуальны, пересчет не требуется');
+            alert('Цены актуальны, пересчёт не требуется');
             return;
         }
 
@@ -317,11 +342,11 @@ async function deleteCalculation(calculationId) {
     try {
         if (confirm('Вы уверены, что хотите удалить этот расчет?')) {
             await api.calculations.delete(calculationId);
-            
+
             // Обновляем списки
             historyData = historyData.filter(item => item.id !== calculationId);
             filteredData = filteredData.filter(item => item.id !== calculationId);
-            
+
             // Обновляем отображение
             displayHistoryData();
         }

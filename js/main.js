@@ -3,7 +3,7 @@
  */
 
 // Base API URL
-const API_URL = window.location.hostname === 'localhost' 
+const API_URL = window.location.hostname === 'localhost'
     ? 'http://127.0.0.1:3001/api'
     : '/api';
 
@@ -12,7 +12,7 @@ const API_URL = window.location.hostname === 'localhost'
  */
 async function fetchAPI(endpoint, options = {}) {
     const token = localStorage.getItem('token');
-    
+
     const defaultOptions = {
         headers: {
             'Content-Type': 'application/json',
@@ -75,11 +75,11 @@ export function formatDate(dateString) {
     const year = date.getFullYear();
     let hours = date.getHours().toString().padStart(2, '0');
     let minutes = date.getMinutes().toString().padStart(2, '0');
-    
+
     if (hours === '00' && minutes === '00') {
         return `${day}.${month}.${year}`;
     }
-    
+
     return `${day}.${month}.${year} ${hours}:${minutes}`;
 }
 
@@ -107,7 +107,7 @@ export function formatCurrency(value) {
     try {
         const user = JSON.parse(currentUser);
         const userInfoContainer = document.getElementById('userInfoContainer');
-        
+
         if (userInfoContainer) {
             userInfoContainer.innerHTML = `
                 <div class="user-avatar">
@@ -135,7 +135,7 @@ export function formatCurrency(value) {
             if (adminNavLink) {
                 adminNavLink.parentElement.style.display = 'none';
             }
-            
+
             const adminCard = document.getElementById('adminCard');
             if (adminCard) {
                 adminCard.style.display = 'none';
@@ -229,6 +229,10 @@ export const api = {
         },
         create: (data) => fetchAPI('/calculations', {
             method: 'POST',
+            body: JSON.stringify(data)
+        }),
+        update: (id, data) => fetchAPI(`/calculations/${id}`, {
+            method: 'PUT',
             body: JSON.stringify(data)
         }),
         delete: (id) => fetchAPI(`/calculations/${id}`, {
