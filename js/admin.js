@@ -87,7 +87,7 @@ function setupPricelistFilters() {
             categories.map(category =>
                 `<option value="${category.id}">${category.name}</option>`
             ).join('');
-        
+
         categorySelect.addEventListener('change', () => {
             filterPricelist();
         });
@@ -104,23 +104,29 @@ function setupPricelistFilters() {
  * Фильтрация прайс-листа
  */
 function filterPricelist() {
-    const categoryId = parseInt(document.getElementById('pricelistCategory').value) || '';
+    const categoryId = parseInt(document.getElementById('pricelistCategory').value);
     const searchTerm = document.getElementById('pricelistSearch').value.toLowerCase();
 
     const filteredPricelist = pricelist.filter(item => {
-        const matchesCategory = !categoryId || 
-            (item.material && item.material.category_id === categoryId);
-            
-        const matchesSearch = !searchTerm || 
-            item.materialName.toLowerCase().includes(searchTerm) ||
-            item.coating.toLowerCase().includes(searchTerm) ||
-            item.thickness.toString().includes(searchTerm);
+        // Check if material exists and has category_id
+        const materialCategoryId = item.material && item.material.Category ?
+            item.material.Category.id : null;
+
+        // Category filter - if no category selected (categoryId is NaN) show all
+        const matchesCategory = isNaN(categoryId) || materialCategoryId === categoryId;
+
+        // Search filter
+        const matchesSearch = !searchTerm ||
+            (item.materialName && item.materialName.toLowerCase().includes(searchTerm)) ||
+            (item.coating && item.coating.toLowerCase().includes(searchTerm)) ||
+            (item.thickness && item.thickness.toString().includes(searchTerm));
 
         return matchesCategory && matchesSearch;
     });
 
     displayPricelist(filteredPricelist);
 }
+
 
 /**
  * Отображение отфильтрованного прайс-листа
@@ -528,13 +534,78 @@ function setupModals() {
     }
 
     // Модальное окно для цен
+    const priceModal = document.getElementById('priceModal');
+    const priceForm = document.getElementById('priceForm');
+    const closePriceModalBtn = document.getElementById('closePriceModalBtn');
+    const cancelPriceBtn = document.getElementById('cancelPriceBtn');
+    const savePriceBtn = document.getElementById('savePriceBtn');
     const addPriceItemBtn = document.getElementById('addPriceItemBtn');
-    if (addPriceItemBtn) {
+
+    if (priceModal && priceForm && closePriceModalBtn && cancelPriceBtn && savePriceBtn && addPriceItemBtn) {
+        // Обработчик открытия модального окна
         addPriceItemBtn.addEventListener('click', () => {
-            // TODO: Implement price modal
-            alert('Функция добавления цены будет доступна в следующей версии');
+            currentPriceId = null;
+            const priceModalTitle = document.getElementById('priceModalTitle');
+            const priceMaterialSelect = document.getElementById('priceMaterial');
+
+            if (priceModalTitle) {
+                priceModalTitle.textContent = 'Добавление позиции';
+            }
+
+            // Заполняем список материалов
+            if (priceMaterialSelect) {
+                priceMaterialSelect.innerHTML = materials.map(material =>
+                    `<option value="${material.id}">${material.name}</option>`
+                ).join('');
+            }
+
+            priceForm.reset();
+            priceModal.style.display = 'block';
+        });
+
+        // Обработчик сохранения цены
+        savePriceBtn.addEventListener('click', async () => {
+            const formData = {
+                material_id: parseInt(document.getElementById('priceMaterial').value),
+                coating: document.getElementById('priceCoating').value.trim(),
+                thickness: parseFloat(document.getElementById('priceThickness').value),
+                price: parseFloat(document.getElementById('priceValue').value),
+                date: new Date().toISOString()
+            };
+
+            if (!formData.material_id || !formData.coating || isNaN(formData.thickness) || isNaN(formData.price)) {
+                alert('Пожалуйста, заполните все поля');
+                return;
+            }
+
+            try {
+                if (currentPriceId) {
+                    await api.prices.update(currentPriceId, formData);
+                } else {
+                    await api.prices.create(formData);
+                }
+
+                priceModal.style.display = 'none';
+                priceForm.reset();
+                currentPriceId = null;
+                await loadPricelist();
+                alert(currentPriceId ? 'Позиция обновлена' : 'Позиция добавлена');
+            } catch (error) {
+                console.error('Ошибка при сохранении позиции:', error);
+                alert(error.message || 'Ошибка при сохранении позиции');
+            }
+        });
+
+        // Обработчики закрытия
+        [closePriceModalBtn, cancelPriceBtn].forEach(btn => {
+            btn.addEventListener('click', () => {
+                priceModal.style.display = 'none';
+                priceForm.reset();
+                currentPriceId = null;
+            });
         });
     }
+
 }
 
 /**

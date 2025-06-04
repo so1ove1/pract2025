@@ -1,6 +1,7 @@
 import express from 'express';
 import { Category, Material, Price } from '../models/index.js';
 import { authenticateToken, isAdmin } from '../middleware/auth.js';
+import { Op } from 'sequelize';
 
 const router = express.Router();
 
@@ -42,21 +43,34 @@ router.post('/categories', authenticateToken, isAdmin, async (req, res) => {
 // Update category (admin only)
 router.put('/categories/:id', authenticateToken, isAdmin, async (req, res) => {
     try {
-        const category = await Category.findByPk(req.params.id);
+        const { name } = req.body;
+        const categoryId = parseInt(req.params.id);
+
+        if (!name) {
+            return res.status(400).json({ message: 'Название категории обязательно' });
+        }
+
+        const category = await Category.findByPk(categoryId);
         if (!category) {
             return res.status(404).json({ message: 'Категория не найдена' });
         }
 
-        const { name } = req.body;
-        if (!name) {
-            return res.status(400).json({ message: 'Название обязательно' });
+        const existingCategory = await Category.findOne({ 
+            where: { 
+                name,
+                id: { [Op.ne]: categoryId }
+            }
+        });
+        
+        if (existingCategory) {
+            return res.status(400).json({ message: 'Категория с таким названием уже существует' });
         }
 
         await category.update({ name });
         res.json(category);
     } catch (error) {
-        console.error('Ошибка обновления категории:', error);
-        res.status(500).json({ message: 'Внутренняя ошибка при обновлении категории' });
+        console.error('Error updating category:', error);
+        res.status(500).json({ message: 'Ошибка при обновлении категории' });
     }
 });
 

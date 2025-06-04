@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,6 +10,7 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
+
 <body>
     <div class="app-container">
         <header class="main-header">
@@ -42,7 +44,7 @@
                     <button class="tab-btn" data-tab="pricelist">Прайс-лист</button>
                     <button class="tab-btn" data-tab="users">Пользователи</button>
                 </div>
-                
+
                 <div class="tab-content">
                     <!-- Вкладка "Материалы" -->
                     <div class="tab-pane active" id="materialsTab">
@@ -57,7 +59,7 @@
                                 </button>
                             </div>
                         </div>
-                        
+
                         <div class="materials-management">
                             <div class="categories-sidebar">
                                 <h3>Категории</h3>
@@ -65,7 +67,7 @@
                                     <!-- Список категорий будет добавлен динамически -->
                                 </ul>
                             </div>
-                            
+
                             <div class="materials-content">
                                 <div class="table-responsive">
                                     <table class="data-table" id="materialsTable">
@@ -86,7 +88,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <!-- Вкладка "Прайс-лист" -->
                     <div class="tab-pane" id="pricelistTab">
                         <div class="tab-header">
@@ -103,7 +105,7 @@
                                 </button>
                             </div>
                         </div>
-                        
+
                         <div class="pricelist-filters">
                             <div class="form-row">
                                 <div class="form-group">
@@ -119,7 +121,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="table-responsive">
                             <table class="data-table" id="pricelistTable">
                                 <thead>
@@ -139,7 +141,7 @@
                             </table>
                         </div>
                     </div>
-                    
+
                     <!-- Вкладка "Пользователи" -->
                     <div class="tab-pane" id="usersTab">
                         <div class="tab-header">
@@ -150,7 +152,7 @@
                                 </button>
                             </div>
                         </div>
-                        
+
                         <div class="table-responsive">
                             <table class="data-table" id="usersTable">
                                 <thead>
@@ -283,7 +285,44 @@
         </div>
     </div>
 
+    <div class="modal" id="priceModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="priceModalTitle">Добавление позиции</h2>
+                <button class="close-btn" id="closePriceModalBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="priceForm">
+                    <div class="form-group">
+                        <label for="priceMaterial">Материал</label>
+                        <select id="priceMaterial" required>
+                            <!-- Будет заполнено динамически -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="priceCoating">Покрытие</label>
+                        <input type="text" id="priceCoating" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="priceThickness">Толщина, мм</label>
+                        <input type="number" id="priceThickness" step="0.01" min="0.1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="priceValue">Цена за м², ₽</label>
+                        <input type="number" id="priceValue" step="0.01" min="0.01" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelPriceBtn">Отмена</button>
+                <button class="btn btn-primary" id="savePriceBtn">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
+
     <script type="module" src="js/main.js"></script>
     <script type="module" src="js/admin.js"></script>
 </body>
+
 </html>
