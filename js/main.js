@@ -33,44 +33,58 @@ function addFaviconLinks() {
 
 document.addEventListener('DOMContentLoaded', addFaviconLinks);
 
-// Base API URL
-const API_URL = window.location.hostname === 'localhost'
-    ? 'http://127.0.0.1:3001/api'
-    : '/api';
-
 /**
  * Send request to API with improved error handling and debugging
  */
-export async function fetchAPI(endpoint, options = {}) {
+async function fetchAPI(endpoint, options = {}) {
     const token = localStorage.getItem('token');
 
-    const headers = {
-        'Content-Type': 'application/json',
-        ...(token && { 'Authorization': `Bearer ${token}` }),
-        ...options.headers
+    const defaultOptions = {
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        }
     };
 
-    const response = await fetch(`/api${endpoint}`, {
-        ...options,
-        headers
-    });
+    const url = `/api${endpoint}`;
 
-    const contentType = response.headers.get('content-type') || '';
-    if (!contentType.includes('application/json')) {
-        const text = await response.text();
-        console.error('Неверный ответ:', text);
-        throw new Error(`Неверный тип ответа: ${contentType}`);
+    try {
+        const response = await fetch(url, {
+            ...defaultOptions,
+            ...options,
+            headers: {
+                ...defaultOptions.headers,
+                ...options.headers
+            }
+        });
+
+        // Handle non-JSON responses
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const text = await response.text();
+            console.error('Invalid response:', text);
+            throw new Error(`Invalid response type: ${contentType}`);
+        }
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            if (response.status === 401) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('currentUser');
+                window.location.href = 'auth.html';
+                throw new Error('Session expired. Please login again.');
+            }
+            throw new Error(data.message || 'Server error');
+        }
+
+        return data;
+    } catch (error) {
+        console.error('API Error:', error);
+        throw error;
     }
-
-    const data = await response.json();
-
-    if (!response.ok) {
-        throw new Error(data.message || 'Ошибка API');
-    }
-
-    return data;
 }
-
 
 /**
  * Format date
