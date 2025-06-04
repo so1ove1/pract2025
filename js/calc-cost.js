@@ -142,7 +142,7 @@ async function loadMaterialsList() {
                                     data-thickness="${option.thickness}"
                                     data-overall-width="${material.overall_width || 1}"
                                     data-working-width="${material.working_width || 1}">
-                                    ${option.coating}, ${option.thickness} мм - ${formatCurrency(option.price)} ₽/${material.unit}
+                                    ${option.coating}, ${option.thickness} мм - ${formatCurrency(option.price)} ₽/м²
                                 </option>
                             `).join('')}
                         </select>

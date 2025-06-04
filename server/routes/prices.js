@@ -8,7 +8,7 @@ const router = express.Router();
 router.get('/', authenticateToken, async (req, res) => {
     try {
         const { categoryId } = req.query;
-        
+
         const include = [{
             model: Material,
             attributes: ['id', 'name', 'code', 'unit', 'overall_width', 'working_width'],
@@ -22,13 +22,18 @@ router.get('/', authenticateToken, async (req, res) => {
         if (categoryId) {
             where['$Material.category_id$'] = categoryId;
         }
-        
+
         const prices = await Price.findAll({
             where,
-            include,
+            include: [
+                {
+                    model: Material,
+                    include: [Category]
+                }
+            ],
             order: [['date', 'DESC']]
         });
-        
+
         // Transform response to include nested data
         const transformedPrices = prices.map(price => ({
             id: price.id,
@@ -45,10 +50,11 @@ router.get('/', authenticateToken, async (req, res) => {
                 code: price.Material.code,
                 unit: price.Material.unit,
                 overallWidth: price.Material.overall_width,
-                workingWidth: price.Material.working_width
+                workingWidth: price.Material.working_width,
+                category_id: price.Material.category_id
             }
         }));
-        
+
         res.json(transformedPrices);
     } catch (error) {
         console.error('Error fetching prices:', error);
@@ -71,11 +77,11 @@ router.post('/', authenticateToken, isAdmin, async (req, res) => {
 router.put('/:id', authenticateToken, isAdmin, async (req, res) => {
     try {
         const price = await Price.findByPk(req.params.id);
-        
+
         if (!price) {
             return res.status(404).json({ message: 'Цена не найдена' });
         }
-        
+
         await price.update(req.body);
         res.json(price);
     } catch (error) {
@@ -88,11 +94,11 @@ router.put('/:id', authenticateToken, isAdmin, async (req, res) => {
 router.delete('/:id', authenticateToken, isAdmin, async (req, res) => {
     try {
         const price = await Price.findByPk(req.params.id);
-        
+
         if (!price) {
             return res.status(404).json({ message: 'Цена не найдена' });
         }
-        
+
         await price.destroy();
         res.json({ message: 'Цена успешно удалена' });
     } catch (error) {

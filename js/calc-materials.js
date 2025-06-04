@@ -323,7 +323,7 @@ function updateCoatingOptions(section) {
         coating: p.coating,
         thickness: p.thickness,
         price: p.price,
-        text: `${p.coating}, ${p.thickness} мм - ${formatCurrency(p.price)} ₽/${material.unit}`
+        text: `${p.coating}, ${p.thickness} мм - ${formatCurrency(p.price)} ₽/м²`
     }));
 
     // Сортируем опции

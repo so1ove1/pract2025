@@ -104,18 +104,20 @@ function setupPricelistFilters() {
  * Фильтрация прайс-листа
  */
 function filterPricelist() {
-    const categoryId = parseInt(document.getElementById('pricelistCategory').value);
+    const categorySelect = document.getElementById('pricelistCategory');
+    const categoryId = categorySelect && categorySelect.value !== '' ? parseInt(categorySelect.value) : null;
     const searchTerm = document.getElementById('pricelistSearch').value.toLowerCase();
 
+    console.log('Фильтрация: categoryId =', categoryId);
+
     const filteredPricelist = pricelist.filter(item => {
-        // Check if material exists and has category_id
-        const materialCategoryId = item.material && item.material.Category ?
-            item.material.Category.id : null;
+        const materialCategoryId = item.material?.category_id;
 
-        // Category filter - if no category selected (categoryId is NaN) show all
-        const matchesCategory = isNaN(categoryId) || materialCategoryId === categoryId;
+        console.log('Материал:', item.material);
+        console.log('materialCategoryId =', materialCategoryId);
 
-        // Search filter
+        const matchesCategory = categoryId === null || materialCategoryId == categoryId;
+
         const matchesSearch = !searchTerm ||
             (item.materialName && item.materialName.toLowerCase().includes(searchTerm)) ||
             (item.coating && item.coating.toLowerCase().includes(searchTerm)) ||
@@ -126,6 +128,8 @@ function filterPricelist() {
 
     displayPricelist(filteredPricelist);
 }
+
+
 
 
 /**

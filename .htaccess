@@ -1,7 +1,10 @@
-PassengerNodejs /home/b/bratskprof/.local/bin/node
+PassengerEnabled On
+PassengerNodejs /home/b/bratskprof/.local/bin/node 
 PassengerAppRoot /home/b/bratskprof/manager/project
 PassengerAppType node
-PassengerStartupFile server.js
+PassengerStartupFile server.cjs
+PassengerFriendlyErrorPages on
+
 
 # Set proper MIME types
 AddType application/javascript .js
@@ -13,18 +16,18 @@ Header set Access-Control-Allow-Origin "https://manager.bratskprofil.ru"
 Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
 Header set Access-Control-Allow-Headers "Content-Type, Authorization"
 
-<IfModule mod_rewrite.c>
-    RewriteEngine On
-    
-    # If the request is for an existing file or directory, serve it directly
-    RewriteCond %{REQUEST_FILENAME} -f [OR]
-    RewriteCond %{REQUEST_FILENAME} -d
-    RewriteRule ^ - [L]
-    
-    # Handle API requests
-    RewriteCond %{REQUEST_URI} ^/api/
-    RewriteRule ^(.*)$ http://localhost:3002/$1 [P,L]
-    
-    # For all other requests, serve index.html
-    RewriteRule ^ index.html [L]
-</IfModule>
+#<IfModule mod_rewrite.c>
+#    RewriteEngine On
+#    
+#    # If the request is for an existing file or directory, serve it directly
+#    RewriteCond %{REQUEST_FILENAME} -f [OR]
+#    RewriteCond %{REQUEST_FILENAME} -d
+#    RewriteRule ^ - [L]
+#    
+#    # Handle API requests
+#    RewriteCond %{REQUEST_URI} ^/api/
+#    RewriteRule ^(.*)$ http://localhost:3002/$1 [P, L]
+#    
+#    # For all other requests, serve index.html
+#    RewriteRule ^ index.html [L]
+#</IfModule>
