@@ -200,14 +200,14 @@ async function loadCategories() {
 
             item.setAttribute('data-category-id', category.id);
 
+            // Обработчик клика по названию категории
             const categoryName = item.querySelector('.category-name');
             if (categoryName) {
                 categoryName.addEventListener('click', () => selectCategory(category.id));
             }
 
+            // Обработчики кнопок редактирования и удаления
             const editBtn = item.querySelector('.edit-category');
-            const deleteBtn = item.querySelector('.delete-category');
-
             if (editBtn) {
                 editBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -215,6 +215,7 @@ async function loadCategories() {
                 });
             }
 
+            const deleteBtn = item.querySelector('.delete-category');
             if (deleteBtn) {
                 deleteBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -234,6 +235,7 @@ async function loadCategories() {
         }
     } catch (error) {
         console.error('Ошибка при загрузке категорий:', error);
+        alert(error.message || 'Ошибка при загрузке категорий');
     }
 }
 
@@ -562,44 +564,53 @@ function setupButtons() {
  */
 async function createCategory(name) {
     try {
-        await api.categories.create({ name });
+        if (!name.trim()) {
+            throw new Error('Название категории не может быть пустым');
+        }
+
+        await api.categories.create({ name: name.trim() });
         await loadCategories();
-        alert('Категория создана');
+        return true;
     } catch (error) {
         console.error('Ошибка при создании категории:', error);
         alert(error.message || 'Ошибка при создании категории');
+        return false;
     }
 }
+
 
 /**
  * Редактирование категории
  */
 function editCategory(category) {
-    currentCategoryId = category.id;
     const categoryModal = document.getElementById('categoryModal');
+    const categoryNameInput = document.getElementById('categoryName');
     const categoryModalTitle = document.getElementById('categoryModalTitle');
 
-    if (categoryModal && categoryModalTitle) {
-        categoryModalTitle.textContent = 'Редактирование категории';
-        document.getElementById('categoryName').value = category.name;
-        categoryModal.style.display = 'block';
-    }
+    if (!categoryModal || !categoryNameInput || !categoryModalTitle) return;
+
+    currentCategoryId = category.id;
+    categoryModalTitle.textContent = 'Редактирование категории';
+    categoryNameInput.value = category.name;
+    categoryModal.style.display = 'block';
 }
 
 /**
  * Удаление категории
  */
 async function deleteCategory(id) {
-    if (confirm('Вы уверены, что хотите удалить эту категорию?')) {
-        try {
-            await api.categories.delete(id);
-            await loadCategories();
-            await loadMaterials();
-            alert('Категория удалена');
-        } catch (error) {
-            console.error('Ошибка при удалении категории:', error);
-            alert(error.message || 'Ошибка при удалении категории');
+    try {
+        if (!confirm('Вы уверены, что хотите удалить эту категорию?')) {
+            return;
         }
+
+        await api.categories.delete(id);
+        await loadCategories();
+        await loadMaterials(); // Перезагружаем материалы, так как они могут быть связаны с удаленной категорией
+        alert('Категория успешно удалена');
+    } catch (error) {
+        console.error('Ошибка при удалении категории:', error);
+        alert(error.message || 'Ошибка при удалении категории');
     }
 }
 
