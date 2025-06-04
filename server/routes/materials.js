@@ -42,33 +42,21 @@ router.post('/categories', authenticateToken, isAdmin, async (req, res) => {
 // Update category (admin only)
 router.put('/categories/:id', authenticateToken, isAdmin, async (req, res) => {
     try {
-        const { name } = req.body;
-        const categoryId = req.params.id;
-
-        if (!name) {
-            return res.status(400).json({ message: 'Название категории обязательно' });
-        }
-
-        const category = await Category.findByPk(categoryId);
+        const category = await Category.findByPk(req.params.id);
         if (!category) {
             return res.status(404).json({ message: 'Категория не найдена' });
         }
 
-        const existingCategory = await Category.findOne({ 
-            where: { 
-                name,
-                id: { [sequelize.Op.ne]: categoryId }
-            }
-        });
-        if (existingCategory) {
-            return res.status(400).json({ message: 'Категория с таким названием уже существует' });
+        const { name } = req.body;
+        if (!name) {
+            return res.status(400).json({ message: 'Название обязательно' });
         }
 
         await category.update({ name });
         res.json(category);
     } catch (error) {
-        console.error('Error updating category:', error);
-        res.status(500).json({ message: 'Ошибка при обновлении категории' });
+        console.error('Ошибка обновления категории:', error);
+        res.status(500).json({ message: 'Внутренняя ошибка при обновлении категории' });
     }
 });
 
