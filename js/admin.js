@@ -82,16 +82,21 @@ function setupPricelistFilters() {
     const searchInput = document.getElementById('pricelistSearch');
 
     if (categorySelect) {
-        categorySelect.addEventListener('change', filterPricelist);
         // Заполняем категории
         categorySelect.innerHTML = '<option value="">Все категории</option>' +
             categories.map(category =>
                 `<option value="${category.id}">${category.name}</option>`
             ).join('');
+        
+        categorySelect.addEventListener('change', () => {
+            filterPricelist();
+        });
     }
 
     if (searchInput) {
-        searchInput.addEventListener('input', filterPricelist);
+        searchInput.addEventListener('input', () => {
+            filterPricelist();
+        });
     }
 }
 
@@ -99,14 +104,18 @@ function setupPricelistFilters() {
  * Фильтрация прайс-листа
  */
 function filterPricelist() {
-    const categoryId = document.getElementById('pricelistCategory').value;
+    const categoryId = parseInt(document.getElementById('pricelistCategory').value) || '';
     const searchTerm = document.getElementById('pricelistSearch').value.toLowerCase();
 
     const filteredPricelist = pricelist.filter(item => {
-        const matchesCategory = !categoryId || item.material.category_id === parseInt(categoryId);
-        const matchesSearch = !searchTerm ||
+        const matchesCategory = !categoryId || 
+            (item.material && item.material.category_id === categoryId);
+            
+        const matchesSearch = !searchTerm || 
             item.materialName.toLowerCase().includes(searchTerm) ||
-            item.coating.toLowerCase().includes(searchTerm);
+            item.coating.toLowerCase().includes(searchTerm) ||
+            item.thickness.toString().includes(searchTerm);
+
         return matchesCategory && matchesSearch;
     });
 
