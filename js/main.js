@@ -47,7 +47,7 @@ async function fetchAPI(endpoint, options = {}) {
         }
     };
 
-    const url = `/api${endpoint}`;
+    const url = endpoint.startsWith('http') ? endpoint : `/api${endpoint}`;
 
     try {
         const response = await fetch(url, {
@@ -59,26 +59,18 @@ async function fetchAPI(endpoint, options = {}) {
             }
         });
 
-        // Handle non-JSON responses
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
+        if (!response.ok) {
             const text = await response.text();
-            console.error('Invalid response:', text);
-            throw new Error(`Invalid response type: ${contentType}`);
+            try {
+                const errorData = JSON.parse(text);
+                throw new Error(errorData.message || 'Server error');
+            } catch (e) {
+                console.error('Server response:', text);
+                throw new Error('Invalid server response');
+            }
         }
 
         const data = await response.json();
-
-        if (!response.ok) {
-            if (response.status === 401) {
-                localStorage.removeItem('token');
-                localStorage.removeItem('currentUser');
-                window.location.href = 'auth.html';
-                throw new Error('Session expired. Please login again.');
-            }
-            throw new Error(data.message || 'Server error');
-        }
-
         return data;
     } catch (error) {
         console.error('API Error:', error);
