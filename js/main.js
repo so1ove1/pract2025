@@ -41,60 +41,36 @@ const API_URL = window.location.hostname === 'localhost'
 /**
  * Send request to API with improved error handling and debugging
  */
-async function fetchAPI(endpoint, options = {}) {
+export async function fetchAPI(endpoint, options = {}) {
     const token = localStorage.getItem('token');
 
-    const defaultOptions = {
-        headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-        },
-        credentials: 'include'
+    const headers = {
+        'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` }),
+        ...options.headers
     };
 
-    const url = `${API_URL}${endpoint}`;
-    console.log(`API Request to: ${url}`, {
-        method: options.method || 'GET',
-        headers: { ...defaultOptions.headers, ...options.headers }
+    const response = await fetch(`/api${endpoint}`, {
+        ...options,
+        headers
     });
 
-    try {
-        const response = await fetch(url, {
-            ...defaultOptions,
-            ...options
-        });
-
-        console.log('Response Headers:', {
-            contentType: response.headers.get('content-type'),
-            status: response.status,
-            statusText: response.statusText
-        });
-
-        // Handle non-JSON responses
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            throw new Error(`Неверный тип ответа: ${contentType}`);
-        }
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            if (response.status === 401) {
-                localStorage.removeItem('token');
-                localStorage.removeItem('currentUser');
-                window.location.href = 'auth.html';
-                throw new Error('Сессия истекла. Пожалуйста, войдите снова.');
-            }
-            throw new Error(data.message || 'Ошибка сервера');
-        }
-
-        return data;
-    } catch (error) {
-        console.error('API Error:', error);
-        throw error;
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error('Неверный ответ:', text);
+        throw new Error(`Неверный тип ответа: ${contentType}`);
     }
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(data.message || 'Ошибка API');
+    }
+
+    return data;
 }
+
 
 /**
  * Format date
