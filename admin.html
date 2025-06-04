@@ -178,6 +178,27 @@
     </div>
 
     <!-- Модальные окна -->
+    <div class="modal" id="categoryModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="categoryModalTitle">Добавление категории</h2>
+                <button class="close-btn" id="closeCategoryModalBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="categoryForm">
+                    <div class="form-group">
+                        <label for="categoryName">Название категории</label>
+                        <input type="text" id="categoryName" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelCategoryBtn">Отмена</button>
+                <button class="btn btn-primary" id="saveCategoryBtn">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
     <div class="modal" id="materialModal">
         <div class="modal-content">
             <div class="modal-header">
