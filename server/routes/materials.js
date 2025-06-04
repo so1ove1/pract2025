@@ -17,6 +17,89 @@ router.get('/categories', authenticateToken, async (req, res) => {
     }
 });
 
+// Create category (admin only)
+router.post('/categories', authenticateToken, isAdmin, async (req, res) => {
+    try {
+        const { name } = req.body;
+        
+        if (!name) {
+            return res.status(400).json({ message: 'Название категории обязательно' });
+        }
+
+        const existingCategory = await Category.findOne({ where: { name } });
+        if (existingCategory) {
+            return res.status(400).json({ message: 'Категория с таким названием уже существует' });
+        }
+
+        const category = await Category.create({ name });
+        res.status(201).json(category);
+    } catch (error) {
+        console.error('Error creating category:', error);
+        res.status(500).json({ message: 'Ошибка при создании категории' });
+    }
+});
+
+// Update category (admin only)
+router.put('/categories/:id', authenticateToken, isAdmin, async (req, res) => {
+    try {
+        const { name } = req.body;
+        const categoryId = req.params.id;
+
+        if (!name) {
+            return res.status(400).json({ message: 'Название категории обязательно' });
+        }
+
+        const category = await Category.findByPk(categoryId);
+        if (!category) {
+            return res.status(404).json({ message: 'Категория не найдена' });
+        }
+
+        const existingCategory = await Category.findOne({ 
+            where: { 
+                name,
+                id: { [sequelize.Op.ne]: categoryId }
+            }
+        });
+        if (existingCategory) {
+            return res.status(400).json({ message: 'Категория с таким названием уже существует' });
+        }
+
+        await category.update({ name });
+        res.json(category);
+    } catch (error) {
+        console.error('Error updating category:', error);
+        res.status(500).json({ message: 'Ошибка при обновлении категории' });
+    }
+});
+
+// Delete category (admin only)
+router.delete('/categories/:id', authenticateToken, isAdmin, async (req, res) => {
+    try {
+        const category = await Category.findByPk(req.params.id);
+        
+        if (!category) {
+            return res.status(404).json({ message: 'Категория не найдена' });
+        }
+
+        // Check if category has materials
+        const materialsCount = await Material.count({ 
+            where: { category_id: req.params.id }
+        });
+
+        if (materialsCount > 0) {
+            return res.status(400).json({ 
+                message: 'Невозможно удалить категорию, содержащую материалы' 
+            });
+        }
+
+        await category.destroy();
+        res.json({ message: 'Категория успешно удалена' });
+    } catch (error) {
+        console.error('Error deleting category:', error);
+        res.status(500).json({ message: 'Ошибка при удалении категории' });
+    }
+});
+
 // Get all materials
 router.get('/', authenticateToken, async (req, res) => {
     try {
