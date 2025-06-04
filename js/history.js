@@ -245,7 +245,7 @@ function displayHistoryData() {
 }
 
 /**
- * Пересчет стоимости с актуальными ценами
+ * Пересчет актуальной цены
  */
 async function recalculatePrice(calculationId) {
     try {
@@ -262,8 +262,7 @@ async function recalculatePrice(calculationId) {
 
         // Пересчитываем каждую позицию
         const updatedItems = calculation.details.items.map(item => {
-            const priceId = parseInt(item.priceId); // Приводим priceId к числу
-            console.log(`Processing item with priceId: ${priceId}`);
+            const priceId = parseInt(item.priceId);
             if (isNaN(priceId)) {
                 console.warn(`Некорректный priceId: ${item.priceId}`);
                 totalAmount += item.total;
@@ -279,20 +278,23 @@ async function recalculatePrice(calculationId) {
 
             const pricePerM2 = currentPrice.price;
             const length = item.length || 1;
-            const width = item.overallWidth || 1;
+            const overallWidth = item.overallWidth || 1;
             const quantity = item.quantity || 1;
 
-            // Проверяем, изменилась ли цена
-            if (pricePerM2 !== item.pricePerM2) {
+            // Пересчитываем цену за единицу (за шт)
+            const unitPrice = pricePerM2 * length * overallWidth;
+            const newTotal = unitPrice * quantity;
+
+            // Проверяем, изменилась ли цена за м² или цена за единицу
+            if (pricePerM2 !== item.pricePerM2 || unitPrice !== item.price) {
                 updated = true;
-                const unitPrice = pricePerM2 * length * width; // Стоимость за единицу
-                const newTotal = pricePerM2 * quantity * length * width; // Общая стоимость
                 totalAmount += newTotal;
+
                 return {
                     ...item,
-                    pricePerM2, // Цена за м²
-                    price: unitPrice, // Цена за единицу (м² * длина * ширина)
-                    total: newTotal // Общая стоимость (м² * количество * длина * ширина)
+                    pricePerM2, // Новая цена за м²
+                    price: unitPrice, // Цена за шт
+                    total: newTotal // Сумма за позицию
                 };
             } else {
                 totalAmount += item.total;
@@ -301,7 +303,7 @@ async function recalculatePrice(calculationId) {
         });
 
         if (!updated) {
-            alert('Цены актуальны, пересчёт не требуется');
+            alert('Цены актуальны, пересчет не требуется');
             return;
         }
 
@@ -322,7 +324,7 @@ async function recalculatePrice(calculationId) {
         const index = historyData.findIndex(item => item.id === calculationId);
         if (index !== -1) {
             historyData[index] = updatedCalculation;
-            filteredData = filteredData.map(item => 
+            filteredData = filteredData.map(item =>
                 item.id === calculationId ? updatedCalculation : item
             );
         }
@@ -334,6 +336,8 @@ async function recalculatePrice(calculationId) {
         alert(error.message || 'Ошибка при пересчете стоимости');
     }
 }
+
+
 
 /**
  * Удаление расчета

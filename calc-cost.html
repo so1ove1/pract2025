@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,12 +9,13 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
+
 <body>
     <div class="app-container">
         <header class="main-header">
             <div class="logo-container">
                 <a href="index.html">
-                    <img src="https://placehold.co/200x50/2B5DA2/FFFFFF?text=Братск+Профиль" alt="Логотип Братск Профиль" class="logo">
+                    <img src="https://bratskprofil.ru/logo.png" alt="Логотип Братск Профиль" class="logo">
                 </a>
             </div>
             <nav class="main-nav">
@@ -45,7 +47,7 @@
                         <input type="text" id="calculationName" placeholder="Введите название расчета">
                     </div>
                 </div>
-                
+
                 <div class="table-responsive">
                     <table class="items-table" id="itemsTable">
                         <thead>
@@ -81,6 +83,9 @@
                     <button class="btn btn-secondary" id="printCalculationBtn">
                         <i class="fas fa-print"></i> Печать
                     </button>
+                    <button class="btn btn-warning" id="resetCalculationBtn">
+                        <i class="fas fa-undo"></i> Сброс расчета
+                    </button>
                 </div>
             </div>
         </main>
@@ -105,12 +110,12 @@
                         <!-- Категории будут добавлены динамически -->
                     </select>
                 </div>
-                
+
                 <div class="form-group">
                     <label for="materialSearch">Поиск</label>
                     <input type="text" id="materialSearch" placeholder="Введите название материала">
                 </div>
-                
+
                 <div class="materials-list" id="materialsList">
                     <!-- Список материалов будет добавлен динамически -->
                 </div>
@@ -124,4 +129,5 @@
     <script type="module" src="js/main.js"></script>
     <script type="module" src="js/calc-cost.js"></script>
 </body>
+
 </html>

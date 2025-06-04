@@ -2,6 +2,37 @@
  * main.js - Common functions for the application
  */
 
+function addFaviconLinks() {
+    const head = document.head || document.getElementsByTagName('head')[0];
+
+    const appleTouchIcon = document.createElement('link');
+    appleTouchIcon.rel = 'apple-touch-icon';
+    appleTouchIcon.sizes = '180x180';
+    appleTouchIcon.href = 'favicon/apple-touch-icon.png';
+    head.appendChild(appleTouchIcon);
+
+    const icon32 = document.createElement('link');
+    icon32.rel = 'icon';
+    icon32.type = 'image/png';
+    icon32.sizes = '32x32';
+    icon32.href = 'favicon/favicon-32x32.png';
+    head.appendChild(icon32);
+
+    const icon16 = document.createElement('link');
+    icon16.rel = 'icon';
+    icon16.type = 'image/png';
+    icon16.sizes = '16x16';
+    icon16.href = 'favicon/favicon-16x16.png';
+    head.appendChild(icon16);
+
+    const manifest = document.createElement('link');
+    manifest.rel = 'manifest';
+    manifest.href = 'favicon/site.webmanifest';
+    head.appendChild(manifest);
+}
+
+document.addEventListener('DOMContentLoaded', addFaviconLinks);
+
 // Base API URL
 const API_URL = window.location.hostname === 'localhost'
     ? 'http://127.0.0.1:3001/api'

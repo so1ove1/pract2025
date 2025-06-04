@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,12 +10,13 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
+
 <body>
     <div class="app-container">
         <header class="main-header">
             <div class="logo-container">
                 <a href="index.html">
-                    <img src="https://placehold.co/200x50/2B5DA2/FFFFFF?text=Братск+Профиль" alt="Логотип Братск Профиль" class="logo">
+                    <img src="https://bratskprofil.ru/logo.png" alt="Логотип Братск Профиль" class="logo">
                 </a>
             </div>
             <nav class="main-nav">
@@ -43,13 +45,13 @@
                         <input type="text" id="calculationMaterialName" placeholder="Введите название расчета">
                     </div>
                 </div>
-                
+
                 <div class="calculation-tabs">
                     <button class="tab-btn active" data-tab="fence">Забор</button>
                     <button class="tab-btn" data-tab="roof">Крыша</button>
                     <button class="tab-btn" data-tab="siding">Обшивка</button>
                 </div>
-                
+
                 <div class="tab-content">
                     <!-- Вкладка "Забор" -->
                     <div class="tab-pane active" id="fenceTab">
@@ -62,7 +64,7 @@
                                 </select>
                             </div>
                         </div>
-                        
+
                         <div class="material-form" id="proflistForm">
                             <h3>Расчет профлиста для забора</h3>
                             <div class="form-row">
@@ -86,11 +88,12 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="fenceHeight">Высота забора, м</label>
-                                    <input type="number" id="fenceHeight" min="0.5" max="3" step="0.1" placeholder="Высота">
+                                    <input type="number" id="fenceHeight" min="0.5" max="3" step="0.1"
+                                        placeholder="Высота">
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="material-form hidden" id="stakeForm">
                             <h3>Расчет штакетника для забора</h3>
                             <div class="form-row">
@@ -114,13 +117,15 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="stakeFenceHeight">Высота забора, м</label>
-                                    <input type="number" id="stakeFenceHeight" min="0.5" max="3" step="0.1" placeholder="Высота">
+                                    <input type="number" id="stakeFenceHeight" min="0.5" max="3" step="0.1"
+                                        placeholder="Высота">
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
                                     <label for="stakeSpacing">Расстояние между штакетинами, мм</label>
-                                    <input type="number" id="stakeSpacing" min="0" max="100" step="1" placeholder="Расстояние">
+                                    <input type="number" id="stakeSpacing" min="0" max="100" step="1"
+                                        placeholder="Расстояние">
                                 </div>
                             </div>
                         </div>
@@ -149,7 +154,7 @@
                                 </select>
                             </div>
                         </div>
-                        
+
                         <div class="material-form">
                             <h3>Параметры крыши</h3>
                             <div class="form-group">
@@ -159,7 +164,7 @@
                                     <option value="double">Двускатная</option>
                                 </select>
                             </div>
-                            
+
                             <div id="singleRoofParams">
                                 <div class="form-row">
                                     <div class="form-group">
@@ -172,7 +177,7 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <div id="doubleRoofParams" class="hidden">
                                 <div class="form-group checkbox-group">
                                     <label class="checkbox-label">
@@ -227,14 +232,14 @@
                                 </select>
                             </div>
                         </div>
-                        
+
                         <div class="material-form">
                             <div class="siding-calculator">
                                 <h3>Стены для обшивки</h3>
                                 <button class="btn btn-primary" id="addWallBtn">
                                     <i class="fas fa-plus"></i> Добавить стену
                                 </button>
-                                
+
                                 <div id="wallsContainer">
                                     <!-- Стены будут добавляться динамически -->
                                 </div>
@@ -242,7 +247,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="calculation-results">
                     <h3>Результаты расчета</h3>
                     <div class="table-responsive">
@@ -271,7 +276,7 @@
                         </table>
                     </div>
                 </div>
-                
+
                 <div class="calculation-actions">
                     <button class="btn btn-primary" id="calculateMaterialsBtn">
                         <i class="fas fa-calculator"></i> Рассчитать
@@ -281,6 +286,9 @@
                     </button>
                     <button class="btn btn-secondary" id="printCalculationBtn">
                         <i class="fas fa-print"></i> Печать
+                    </button>
+                    <button class="btn btn-warning" id="resetCalculationBtn">
+                        <i class="fas fa-undo"></i> Сброс расчета
                     </button>
                 </div>
             </div>
@@ -294,4 +302,5 @@
     <script type="module" src="js/main.js"></script>
     <script type="module" src="js/calc-materials.js"></script>
 </body>
+
 </html>

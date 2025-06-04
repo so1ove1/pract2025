@@ -14,19 +14,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     const printCalculationBtn = document.getElementById('printCalculationBtn');
     const closeModalBtn = document.getElementById('closeModalBtn');
     const cancelMaterialBtn = document.getElementById('cancelMaterialBtn');
-    
+
     // Обработчики событий
     if (addItemBtn) addItemBtn.addEventListener('click', openMaterialModal);
     if (saveCalculationBtn) saveCalculationBtn.addEventListener('click', saveCalculation);
     if (printCalculationBtn) printCalculationBtn.addEventListener('click', printCalculation);
     if (closeModalBtn) closeModalBtn.addEventListener('click', closeMaterialModal);
     if (cancelMaterialBtn) cancelMaterialBtn.addEventListener('click', closeMaterialModal);
-    
+
     // Инициализация модального окна выбора материала
     await initMaterialModal();
-    
+
     // Инициализация таблицы
     updateCalculationTable();
+    
+    const resetCalculationBtn = document.getElementById('resetCalculationBtn');
+    if (resetCalculationBtn) {
+        resetCalculationBtn.addEventListener('click', () => {
+            if (confirm('Вы уверены, что хотите сбросить расчет? Все несохраненные данные будут утеряны.')) {
+                document.getElementById('calculationName').value = '';
+                itemsData = [];
+                updateCalculationTable();
+            }
+        });
+    }
+
 });
 
 /**
@@ -36,11 +48,11 @@ async function initMaterialModal() {
     const materialCategory = document.getElementById('materialCategory');
     const materialSearch = document.getElementById('materialSearch');
     const materialsList = document.getElementById('materialsList');
-    
+
     try {
         // Загружаем категории материалов
         const categories = await api.categories.getAll();
-        
+
         if (materialCategory) {
             materialCategory.innerHTML = '<option value="">Все категории</option>';
             categories.forEach(category => {
@@ -50,10 +62,10 @@ async function initMaterialModal() {
                 materialCategory.appendChild(option);
             });
         }
-        
+
         // Загружаем начальный список материалов
         await loadMaterialsList();
-        
+
         // Обработчики событий для фильтрации
         if (materialCategory) {
             materialCategory.addEventListener('change', loadMaterialsList);
@@ -73,46 +85,46 @@ async function loadMaterialsList() {
     const materialCategory = document.getElementById('materialCategory');
     const materialSearch = document.getElementById('materialSearch');
     const materialsList = document.getElementById('materialsList');
-    
+
     if (!materialsList) return;
-    
+
     try {
         // Подготавливаем параметры запроса
         const params = {};
-        
+
         if (materialCategory && materialCategory.value) {
             params.categoryId = materialCategory.value;
         }
-        
+
         // Загружаем материалы и прайс-лист
         const materials = await api.materials.getAll(params);
         const priceList = await api.prices.getAll(params);
-        
+
         // Очищаем список
         materialsList.innerHTML = '';
-        
+
         // Фильтрация по поисковому запросу
         const searchTerm = materialSearch ? materialSearch.value.toLowerCase() : '';
-        const filteredMaterials = materials.filter(material => 
-            material.name.toLowerCase().includes(searchTerm) || 
+        const filteredMaterials = materials.filter(material =>
+            material.name.toLowerCase().includes(searchTerm) ||
             material.code.toLowerCase().includes(searchTerm)
         );
-        
+
         // Если ничего не найдено
         if (filteredMaterials.length === 0) {
             materialsList.innerHTML = '<div class="no-data">Ничего не найдено</div>';
             return;
         }
-        
+
         // Добавляем материалы в список
         filteredMaterials.forEach(material => {
             // Находим все ценовые позиции для данного материала
             const priceOptions = priceList.filter(item => item.materialId === material.id);
-            
+
             if (priceOptions.length > 0) {
                 const materialItem = document.createElement('div');
                 materialItem.className = 'material-item';
-                
+
                 materialItem.innerHTML = `
                     <div class="material-info">
                         <h3>${material.name}</h3>
@@ -137,13 +149,13 @@ async function loadMaterialsList() {
                         <button class="btn btn-primary add-material-btn">Добавить</button>
                     </div>
                 `;
-                
+
                 // Обработчик для кнопки добавления
                 const addBtn = materialItem.querySelector('.add-material-btn');
                 addBtn.addEventListener('click', () => {
                     const select = materialItem.querySelector('.price-select');
                     const option = select.options[select.selectedIndex];
-                    
+
                     addMaterialToCalculation({
                         materialId: option.getAttribute('data-material-id'),
                         priceId: select.value,
@@ -155,11 +167,11 @@ async function loadMaterialsList() {
                         overallWidth: parseFloat(option.getAttribute('data-overall-width')),
                         workingWidth: parseFloat(option.getAttribute('data-working-width'))
                     });
-                    
+
                     // Закрываем модальное окно
                     closeMaterialModal();
                 });
-                
+
                 materialsList.appendChild(materialItem);
             }
         });
@@ -199,9 +211,9 @@ function addMaterialToCalculation(materialData) {
         pricePerPiece: calculatePricePerPiece(materialData.price, 1, materialData.overallWidth || 1),
         total: calculateItemTotal(materialData.price, 1, materialData.overallWidth || 1, 1)
     };
-    
+
     itemsData.push(newItem);
-    
+
     // Обновляем таблицу
     updateCalculationTable();
 }
@@ -227,12 +239,12 @@ function calculateItemTotal(price, length, overallWidth, quantity) {
 function updateCalculationTable() {
     const tableBody = document.getElementById('itemsTableBody');
     const totalAmountElement = document.getElementById('totalAmount');
-    
+
     if (!tableBody || !totalAmountElement) return;
-    
+
     // Очищаем таблицу
     tableBody.innerHTML = '';
-    
+
     // Если нет товаров, показываем сообщение
     if (itemsData.length === 0) {
         const emptyRow = document.createElement('tr');
@@ -243,18 +255,18 @@ function updateCalculationTable() {
         totalAmountElement.textContent = '0.00 ₽';
         return;
     }
-    
+
     // Добавляем строки для каждого товара
     let totalAmount = 0;
-    
+
     itemsData.forEach((item, index) => {
         const row = document.createElement('tr');
-        
+
         // Обновляем цену за штуку и итоговую сумму для товара
         item.pricePerPiece = calculatePricePerPiece(item.price, item.length, item.overallWidth);
         item.total = item.pricePerPiece * item.quantity;
         totalAmount += item.total;
-        
+
         row.innerHTML = `
             <td>${index + 1}</td>
             <td>${item.name} (${item.coating}, ${item.thickness} мм)</td>
@@ -282,68 +294,68 @@ function updateCalculationTable() {
                 </button>
             </td>
         `;
-        
+
         tableBody.appendChild(row);
     });
-    
+
     // Обновляем итоговую сумму
     totalAmountElement.textContent = `${formatCurrency(totalAmount)} ₽`;
-    
+
     // Добавляем обработчики для изменения длины, количества и цены
     const lengthInputs = document.querySelectorAll('.length-input');
     const quantityInputs = document.querySelectorAll('.quantity-input');
     const priceInputs = document.querySelectorAll('.price-input');
     const copyButtons = document.querySelectorAll('.btn-copy');
     const deleteButtons = document.querySelectorAll('.delete-item-btn');
-    
+
     // Обработчики для изменения длины
     lengthInputs.forEach(input => {
         input.addEventListener('change', () => {
             const index = parseInt(input.getAttribute('data-index'));
             const length = parseFloat(input.value);
-            
+
             if (length <= 0 || isNaN(length)) {
                 input.value = itemsData[index].length;
                 return;
             }
-            
+
             itemsData[index].length = length;
             updateCalculationTable();
         });
     });
-    
+
     // Обработчики для изменения количества
     quantityInputs.forEach(input => {
         input.addEventListener('change', () => {
             const index = parseInt(input.getAttribute('data-index'));
             const quantity = parseInt(input.value);
-            
+
             if (quantity <= 0 || isNaN(quantity)) {
                 input.value = itemsData[index].quantity;
                 return;
             }
-            
+
             itemsData[index].quantity = quantity;
             updateCalculationTable();
         });
     });
-    
+
     // Обработчики для изменения цены
     priceInputs.forEach(input => {
         input.addEventListener('change', () => {
             const index = parseInt(input.getAttribute('data-index'));
             const price = parseFloat(input.value);
-            
+
             if (price <= 0 || isNaN(price)) {
                 input.value = itemsData[index].price;
                 return;
             }
-            
+
             itemsData[index].price = price;
             updateCalculationTable();
         });
     });
-    
+
     // Обработчики для копирования
     copyButtons.forEach(button => {
         button.addEventListener('click', () => {
@@ -353,12 +365,12 @@ function updateCalculationTable() {
             updateCalculationTable();
         });
     });
-    
+
     // Обработчики для удаления
     deleteButtons.forEach(button => {
         button.addEventListener('click', () => {
             const index = parseInt(button.getAttribute('data-index'));
-            
+
             if (confirm('Вы уверены, что хотите удалить этот товар?')) {
                 itemsData.splice(index, 1);
                 updateCalculationTable();
@@ -372,22 +384,20 @@ function updateCalculationTable() {
  */
 async function saveCalculation() {
     const calculationName = document.getElementById('calculationName').value;
-    
-    if (itemsData.length === 0) {
-        alert('Добавьте хотя бы один товар для сохранения расчета');
-        return;
-    }
-    
+
     if (!calculationName) {
-        alert('Пожалуйста, введите название расчета');
-        document.getElementById('calculationName').focus();
+        alert('Введите название расчета');
         return;
     }
-    
+
+    if (itemsData.length === 0) {
+        alert('Нет данных для сохранения');
+        return;
+    }
+
     try {
-        // Подготавливаем данные для сохранения
         const totalAmount = itemsData.reduce((sum, item) => sum + item.total, 0);
-        
+
         const calculationData = {
             name: calculationName,
             type: 'calculation-cost',
@@ -397,20 +407,20 @@ async function saveCalculation() {
                     materialId: item.materialId,
                     priceId: item.priceId,
                     name: `${item.name} (${item.coating}, ${item.thickness} мм)`,
+                    unit: item.unit,
                     length: item.length,
                     quantity: item.quantity,
-                    price: item.price,
-                    pricePerPiece: item.pricePerPiece,
-                    total: item.total
+                    pricePerM2: item.price, // Цена за м² (как price)
+                    price: item.pricePerPiece, // Цена за 1 шт
+                    total: item.total,
+                    overallWidth: item.overallWidth
                 }))
             }
         };
-        
-        // Сохраняем расчет
+
         await api.calculations.create(calculationData);
-        
         alert('Расчет успешно сохранен');
-        
+
         // Сбрасываем форму
         document.getElementById('calculationName').value = '';
         itemsData = [];
@@ -421,6 +431,7 @@ async function saveCalculation() {
     }
 }
 
+
 /**
  * Печать расчета
  */
@@ -429,10 +440,10 @@ function printCalculation() {
         alert('Добавьте хотя бы один товар для печати расчета');
         return;
     }
-    
+
     const calculationName = document.getElementById('calculationName').value || 'Расчет стоимости';
     const totalAmount = itemsData.reduce((sum, item) => sum + item.total, 0);
-    
+
     // Создаем содержимое для печати
     let printContent = `
         <html>
@@ -470,7 +481,7 @@ function printCalculation() {
                 </thead>
                 <tbody>
     `;
-    
+
     // Добавляем строки товаров
     itemsData.forEach((item, index) => {
         printContent += `
@@ -485,7 +496,7 @@ function printCalculation() {
             </tr>
         `;
     });
-    
+
     // Добавляем итоговую сумму
     printContent += `
                 </tbody>
@@ -499,12 +510,12 @@ function printCalculation() {
         </body>
         </html>
     `;
-    
+
     // Открываем новое окно для печати
     const printWindow = window.open('', '_blank');
     printWindow.document.write(printContent);
     printWindow.document.close();
-    
+
     // Запускаем печать
     setTimeout(() => {
         printWindow.print();

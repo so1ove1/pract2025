@@ -122,7 +122,6 @@ a:hover {
     height: 40px;
     width: auto;
     transition: transform var(--transition-speed) ease;
-    filter: brightness(0) invert(1);
 }
 
 .logo:hover {
@@ -154,18 +153,18 @@ a:hover {
 }
 
 .main-nav a:hover {
-    background-color: var(--primary-light);
+    background-color: rgba(255, 255, 255, 0.1);
     text-decoration: none;
 }
 
 .main-nav a.active {
-    background-color: var(--primary-light);
-    font-weight: 500;
+    background-color: rgba(255, 255, 255, 0.2);
+    font-weight: bold;
 }
 
 /* Подвал */
 .main-footer {
-    background-color: var(--primary-dark);
+    background-color: var(--gray-800);
     color: white;
     padding: 16px 24px;
     text-align: center;
@@ -382,9 +381,14 @@ table {
     align-items: center;
 }
 
+.logout-btn{
+    width: 5rem;
+    height: 1.75rem;
+}
+
 .auth-logo {
-    margin-bottom: 32px;
-    width: 15rem;
+    margin-bottom: 1rem;
+    width: 25rem;
 }
 
 .auth-card {
@@ -425,6 +429,47 @@ table {
     color: var(--primary-color);
 }
 
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+}
+
+.feature-card {
+    background-color: white;
+    padding: 24px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    text-align: center;
+    transition: transform var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: var(--gray-800);
+}
+
+.feature-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    text-decoration: none;
+}
+
+.card-icon {
+    font-size: 2.5rem;
+    margin-bottom: 16px;
+    color: var(--primary-color);
+}
+
+.feature-card h2 {
+    color: var(--primary-color);
+    margin-bottom: 8px;
+}
+
+.feature-card p {
+    color: var(--gray-600);
+}
+
 /* Главное меню */
 .features-grid {
     display: grid;
@@ -453,31 +498,6 @@ table {
     transform: translateY(-4px);
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
     text-decoration: none;
-    background-color: var(--primary-color);
-    color: white;
-}
-
-.feature-card:hover .card-icon {
-    color: white;
-}
-
-.card-icon {
-    font-size: 2.5rem;
-    margin-bottom: 16px;
-    color: var(--primary-color);
-    transition: color var(--transition-speed) ease;
-}
-
-.feature-card h2 {
-    color: inherit;
-    margin-bottom: 8px;
-    transition: color var(--transition-speed) ease;
-}
-
-.feature-card p {
-    color: inherit;
-    opacity: 0.9;
-    transition: color var(--transition-speed) ease;
 }
 
 /* Модальные окна */
@@ -557,43 +577,453 @@ table {
     color: var(--gray-800);
 }
 
+/* Стили для модального окна просмотра расчета */
+.calculation-info {
+    background-color: var(--gray-100);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.calculation-info p {
+    margin-bottom: 12px;
+    font-size: 1.1rem;
+}
+
+.calculation-info strong {
+    color: var(--gray-700);
+}
+
+.calculation-details {
+    margin-top: 24px;
+}
+
+.calculation-details h3 {
+    color: var(--primary-color);
+    margin-bottom: 16px;
+}
+
+.calculation-details table {
+    width: 100%;
+    background-color: white;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    box-shadow: var(--box-shadow);
+}
+
+.calculation-details th {
+    background-color: var(--gray-100);
+    font-weight: 500;
+    color: var(--gray-700);
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 2px solid var(--gray-200);
+}
+
+.calculation-details td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.calculation-details tr:last-child td {
+    border-bottom: none;
+}
+
+.calculation-details tr:hover td {
+    background-color: var(--gray-50);
+}
+
+.calculation-total {
+    margin-top: 20px;
+    text-align: right;
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: var(--primary-color);
+}
+
+/* Расчет стоимости */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.calculation-container {
+    background-color: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+.items-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    background-color: white;
+}
+
+.items-table th,
+.items-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--gray-200);
+    height: 48px;
+    vertical-align: middle;
+}
+
+.items-table th {
+    background-color: var(--gray-100);
+    font-weight: 500;
+}
+
+.items-table input {
+    width: 120px;
+    padding: 8px;
+    border: 1px solid var(--gray-300);
+    border-radius: var(--border-radius);
+}
+
+.items-table input:focus {
+    outline: none;
+    border-color: var(--primary-light);
+    box-shadow: 0 0 0 2px rgba(74, 124, 195, 0.2);
+}
+
+.items-table tfoot td {
+    font-weight: 500;
+}
+
+.calculation-actions {
+    margin-top: 24px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+/* Стили для модального окна выбора материала */
+.material-selection-modal .modal-content {
+    width: 90%;
+    max-width: 800px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.material-selection-modal .modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+}
+
+.materials-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.material-item {
+    border: 1px solid var(--gray-200);
+    border-radius: var(--border-radius);
+    padding: 16px;
+    background-color: white;
+    transition: all var(--transition-speed) ease;
+}
+
+.material-item:hover {
+    border-color: var(--primary-color);
+    box-shadow: var(--box-shadow);
+}
+
+.material-info {
+    margin-bottom: 12px;
+}
+
+.material-info h3 {
+    margin: 0 0 4px 0;
+    font-size: 1rem;
+    color: var(--gray-900);
+}
+
+.material-info p {
+    margin: 0;
+    color: var(--gray-600);
+    font-size: 0.875rem;
+}
+
+.price-options {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.price-select {
+    flex: 1;
+}
+
+/* Стили для фильтров материалов */
+.material-filters {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+    padding: 16px;
+    background-color: var(--gray-100);
+    border-radius: var(--border-radius);
+}
+
+/* Страница администрирования */
+.admin-container {
+    background-color: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 24px;
+}
+
+.tab-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.tab-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.materials-management {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    gap: 24px;
+}
+
+.categories-sidebar {
+    border-right: 1px solid var(--gray-200);
+    padding-right: 24px;
+}
+
+.categories-list {
+    list-style: none;
+}
+
+.categories-list li {
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: var(--border-radius);
+    margin-bottom: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.categories-list li:hover {
+    background-color: var(--gray-100);
+}
+
+.categories-list li.active {
+    background-color: var(--primary-light);
+    color: white;
+}
+
+.pricelist-filters {
+    margin-bottom: 24px;
+    padding: 16px;
+    background-color: var(--gray-100);
+    border-radius: var(--border-radius);
+}
+
+/* История расчетов */
+.history-filters {
+    margin-bottom: 24px;
+    padding: 16px;
+    background-color: var(--gray-100);
+    border-radius: var(--border-radius);
+}
+
+.filter-buttons {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 24px;
+}
+
+.page-btn {
+    min-width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--gray-300);
+    background-color: white;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.page-btn.active {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.page-btn:hover:not(.active) {
+    background-color: var(--gray-100);
+}
+
+.calculation-results {
+    padding: 16px;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--border-radius);
+    margin: 24px 0;
+}
+
+.items-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    background-color: white;
+}
+
+.items-table th,
+.items-table td {
+    padding: 12px 16px;
+    text-align: left;
+    border: 1px solid var(--gray-200);
+    vertical-align: middle;
+    height: 48px;
+    line-height: 1.5;
+}
+
+.items-table th {
+    background-color: var(--gray-100);
+    font-weight: 500;
+    color: var(--gray-700);
+    white-space: nowrap;
+}
+
+.items-table tbody tr:hover {
+    background-color: var(--gray-50);
+}
+
+.items-table input[type="number"] {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid var(--gray-300);
+    border-radius: var(--border-radius);
+    font-size: 14px;
+}
+
+.items-table .actions-cell {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-start;
+    align-items: center;
+    height: 100%;
+    min-height: 48px;
+}
+
+.items-table .btn-sm {
+    padding: 6px 8px;
+    line-height: 1;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.items-table tfoot td {
+    background-color: var(--gray-50);
+    font-weight: 500;
+}
+
+/* Adding new styles for the copy button and quantity field */
+.items-table .actions-cell {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-start;
+    align-items: center;
+    height: 100%;
+}
+
+.items-table .quantity-input,
+.items-table .length-input {
+    width: 80px;
+    text-align: right;
+}
+
+.btn-copy {
+    background-color: var(--info-color);
+    color: white;
+}
+
+.btn-copy:hover {
+    background-color: #2563eb;
+}
+
+/* Small buttons in tables */
+.btn-sm {
+    padding: 6px 8px;
+    line-height: 1;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+}
+
+/* Form help text */
+.form-help {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.875rem;
+    color: var(--gray-500);
+}
+
+.items-table td {
+    height: 48px;
+    vertical-align: middle;
+}
+
+.items-table .actions-cell {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-start;
+    align-items: center;
+    height: 100%;
+}
+
+.items-table .btn-sm {
+    padding: 6px 8px;
+    line-height: 1;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.items-table input.length-input,
+.items-table input.quantity-input {
+    width: 80px;
+    text-align: right;
+    padding: 4px 8px;
+    height: 32px;
+}
+
 /* Информация о пользователе */
 .user-info {
     display: flex;
     align-items: center;
     gap: 12px;
     margin-left: auto;
-    background-color: var(--primary-light);
-    padding: 8px 16px;
-    border-radius: var(--border-radius);
-}
-
-.user-info .user-name {
-    font-weight: 500;
-    color: white;
-}
-
-.user-info .user-role {
-    color: rgba(255, 255, 255, 0.8);
-    font-size: 0.875rem;
-}
-
-.user-info .logout-btn {
-    background-color: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: white;
-    cursor: pointer;
-    padding: 4px 12px;
-    border-radius: var(--border-radius);
-    transition: all var(--transition-speed) ease;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.user-info .logout-btn:hover {
-    background-color: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.3);
 }
 
 /* Fix mobile navigation */
@@ -633,7 +1063,6 @@ table {
         justify-content: center;
         width: 100%;
         margin-top: 8px;
-        margin-left: 0;
     }
 
     .features-grid {
@@ -689,6 +1118,7 @@ table {
     .calculation-details th {
         padding: 8px;
     }
+    
 }
 
 @media (max-width: 480px) {
@@ -710,6 +1140,7 @@ table {
         gap: 8px;
     }
 }
+
 
 /* Fix tabs */
 .calculation-tabs {

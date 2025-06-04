@@ -60,6 +60,32 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (roofMaterialType) {
         updateMaterialSubtypes('roof', roofMaterialType.value);
     }
+
+    const resetCalculationBtn = document.getElementById('resetCalculationBtn');
+    if (resetCalculationBtn) {
+        resetCalculationBtn.addEventListener('click', () => {
+            if (confirm('Вы уверены, что хотите сбросить расчет? Все несохраненные данные будут утеряны.')) {
+                document.getElementById('calculationMaterialName').value = '';
+                calculationResults = [];
+                updateResultsTable();
+
+                // Reset all input fields
+                const inputs = document.querySelectorAll('input[type="number"]');
+                inputs.forEach(input => input.value = '');
+
+                // Reset all selects to first option
+                const selects = document.querySelectorAll('select');
+                selects.forEach(select => select.selectedIndex = 0);
+
+                // Reset walls container if exists
+                const wallsContainer = document.getElementById('wallsContainer');
+                if (wallsContainer) {
+                    wallsContainer.innerHTML = '';
+                }
+            }
+        });
+    }
+
 });
 
 /**
@@ -795,10 +821,11 @@ function printCalculation() {
     const totalAmount = calculationResults.reduce((sum, item) => sum + item.total, 0);
 
     // Создаем содержимое для печати
+    // Создаем содержимое для печати
     let printContent = `
         <html>
         <head>
-            <title>Расчет материалов - ${calculationName}</title>
+            <title>Расчет стоимости - ${calculationName}</title>
             <style>
                 body { font-family: Arial, sans-serif; margin: 20px; }
                 h1 { color: #2B5DA2; }
@@ -821,17 +848,18 @@ function printCalculation() {
                 <thead>
                     <tr>
                         <th>№</th>
-                        <th>Название материала</th>
+                        <th>Материал</th>
                         <th>Длина, м</th>
-                        <th>Кол-во, шт</th>
+                        <th>Количество</th>
                         <th>Цена за м², ₽</th>
+                        <th>Цена за шт., ₽</th>
                         <th>Сумма, ₽</th>
                     </tr>
                 </thead>
                 <tbody>
     `;
 
-    // Добавляем строки материалов
+    // Добавляем строки товаров
     calculationResults.forEach((item, index) => {
         printContent += `
             <tr>
@@ -839,6 +867,7 @@ function printCalculation() {
                 <td>${item.name}</td>
                 <td>${item.length}</td>
                 <td>${item.quantity}</td>
+                <td>${formatCurrency(item.pricePerM2)}</td>
                 <td>${formatCurrency(item.price)}</td>
                 <td>${formatCurrency(item.total)}</td>
             </tr>
@@ -850,8 +879,8 @@ function printCalculation() {
                 </tbody>
                 <tfoot>
                     <tr>
-                        <td colspan="5" class="text-right"><strong>Итого:</strong></td>
-                        <td><strong>${formatCurrency(totalAmount)}</strong></td>
+                        <td colspan="6" class="text-right"><strong>Итого:</strong></td>
+                        <td><strong>${formatCurrency(totalAmount)} ₽</strong></td>
                     </tr>
                 </tfoot>
             </table>
