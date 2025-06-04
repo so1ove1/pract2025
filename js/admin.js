@@ -578,7 +578,6 @@ async function createCategory(name) {
     }
 }
 
-
 /**
  * Редактирование категории
  */
