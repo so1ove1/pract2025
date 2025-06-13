@@ -108,6 +108,50 @@ function setupImportExport() {
     if (exportBtn) {
         exportBtn.addEventListener('click', exportPricelist);
     }
+
+    // Добавляем кнопку скачивания шаблона
+    const templateBtn = document.createElement('button');
+    templateBtn.className = 'btn btn-secondary';
+    templateBtn.innerHTML = '<i class="fas fa-download"></i> Скачать шаблон';
+    templateBtn.addEventListener('click', downloadTemplate);
+    
+    // Вставляем кнопку рядом с кнопками импорта/экспорта
+    const tabActions = document.querySelector('#pricelistTab .tab-actions');
+    if (tabActions) {
+        tabActions.appendChild(templateBtn);
+    }
+}
+
+/**
+ * Скачивание шаблона
+ */
+async function downloadTemplate() {
+    try {
+        const response = await fetch('/api/prices/template', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Ошибка при скачивании шаблона');
+        }
+
+        // Получаем blob и создаем ссылку для скачивания
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'price_template.xlsx';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+    } catch (error) {
+        console.error('Ошибка при скачивании шаблона:', error);
+        alert('Ошибка при скачивании шаблона');
+    }
 }
 
 /**

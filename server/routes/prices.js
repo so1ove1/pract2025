@@ -1,6 +1,6 @@
 import express from 'express';
 import multer from 'multer';
-import XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import path from 'path';
 import fs from 'fs';
 import { Material, Price, Category } from '../models/index.js';
@@ -105,49 +105,68 @@ router.get('/export', authenticateToken, isAdmin, async (req, res) => {
             order: [['date', 'DESC']]
         });
 
-        // Подготавливаем данные для экспорта
-        const exportData = prices.map((price, index) => ({
-            '№': index + 1,
-            'Категория': price.Material.Category.name,
-            'Материал': price.Material.name,
-            'Код материала': price.Material.code,
-            'Покрытие': price.coating,
-            'Толщина (мм)': price.thickness,
-            'Цена за м² (₽)': price.price,
-            'Дата обновления': new Date(price.date).toLocaleDateString('ru-RU')
-        }));
-
         // Создаем новую книгу Excel
-        const workbook = XLSX.utils.book_new();
-        
-        // Создаем лист с данными
-        const worksheet = XLSX.utils.json_to_sheet(exportData);
-        
-        // Настраиваем ширину колонок
-        const columnWidths = [
-            { wch: 5 },   // №
-            { wch: 20 },  // Категория
-            { wch: 30 },  // Материал
-            { wch: 15 },  // Код материала
-            { wch: 20 },  // Покрытие
-            { wch: 12 },  // Толщина
-            { wch: 15 },  // Цена
-            { wch: 15 }   // Дата
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Прайс-лист');
+
+        // Определяем заголовки
+        const headers = [
+            { header: '№', key: 'number', width: 5 },
+            { header: 'Категория', key: 'category', width: 20 },
+            { header: 'Материал', key: 'material', width: 30 },
+            { header: 'Код материала', key: 'code', width: 15 },
+            { header: 'Покрытие', key: 'coating', width: 20 },
+            { header: 'Толщина (мм)', key: 'thickness', width: 12 },
+            { header: 'Цена за м² (₽)', key: 'price', width: 15 },
+            { header: 'Дата обновления', key: 'date', width: 15 }
         ];
-        worksheet['!cols'] = columnWidths;
 
-        // Добавляем лист в книгу
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'Прайс-лист');
+        worksheet.columns = headers;
 
-        // Генерируем буфер
-        const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+        // Стилизуем заголовки
+        worksheet.getRow(1).font = { bold: true };
+        worksheet.getRow(1).fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFE6E6FA' }
+        };
+
+        // Добавляем данные
+        prices.forEach((price, index) => {
+            worksheet.addRow({
+                number: index + 1,
+                category: price.Material.Category.name,
+                material: price.Material.name,
+                code: price.Material.code,
+                coating: price.coating,
+                thickness: price.thickness,
+                price: price.price,
+                date: new Date(price.date).toLocaleDateString('ru-RU')
+            });
+        });
+
+        // Применяем границы к таблице
+        const borderStyle = {
+            top: { style: 'thin' },
+            left: { style: 'thin' },
+            bottom: { style: 'thin' },
+            right: { style: 'thin' }
+        };
+
+        worksheet.eachRow((row, rowNumber) => {
+            row.eachCell((cell) => {
+                cell.border = borderStyle;
+            });
+        });
 
         // Устанавливаем заголовки для скачивания файла
         const filename = `pricelist_${new Date().toISOString().split('T')[0]}.xlsx`;
         res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
 
-        res.send(buffer);
+        // Записываем в response
+        await workbook.xlsx.write(res);
+        res.end();
     } catch (error) {
         console.error('Error exporting prices:', error);
         res.status(500).json({ message: 'Ошибка при экспорте прайс-листа' });
@@ -162,14 +181,12 @@ router.post('/import', authenticateToken, isAdmin, upload.single('file'), async 
         }
 
         // Читаем загруженный файл
-        const workbook = XLSX.readFile(req.file.path);
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
+        const workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.readFile(req.file.path);
         
-        // Преобразуем в JSON
-        const data = XLSX.utils.sheet_to_json(worksheet);
-
-        if (data.length === 0) {
+        const worksheet = workbook.getWorksheet(1); // Первый лист
+        
+        if (!worksheet) {
             // Удаляем загруженный файл
             fs.unlinkSync(req.file.path);
             return res.status(400).json({ message: 'Файл пуст или имеет неверный формат' });
@@ -187,18 +204,23 @@ router.post('/import', authenticateToken, isAdmin, upload.single('file'), async 
             warnings: []
         };
 
-        // Обрабатываем каждую строку
-        for (let i = 0; i < data.length; i++) {
-            const row = data[i];
-            const rowNumber = i + 2; // +2 потому что первая строка - заголовки, и индекс начинается с 0
+        // Пропускаем заголовок (первая строка) и обрабатываем данные
+        for (let rowNumber = 2; rowNumber <= worksheet.rowCount; rowNumber++) {
+            const row = worksheet.getRow(rowNumber);
+            
+            // Пропускаем пустые строки
+            if (row.hasValues === false) {
+                continue;
+            }
 
             try {
-                // Проверяем обязательные поля
-                const categoryName = row['Категория']?.toString().trim();
-                const materialName = row['Материал']?.toString().trim();
-                const coating = row['Покрытие']?.toString().trim();
-                const thickness = parseFloat(row['Толщина (мм)']);
-                const price = parseFloat(row['Цена за м² (₽)']);
+                // Получаем значения из ячеек
+                const categoryName = row.getCell(2).text?.trim(); // Категория
+                const materialName = row.getCell(3).text?.trim(); // Материал
+                const materialCode = row.getCell(4).text?.trim(); // Код материала
+                const coating = row.getCell(5).text?.trim(); // Покрытие
+                const thickness = parseFloat(row.getCell(6).value); // Толщина
+                const price = parseFloat(row.getCell(7).value); // Цена
 
                 if (!categoryName || !materialName || !coating || isNaN(thickness) || isNaN(price)) {
                     results.errors.push(`Строка ${rowNumber}: Не заполнены обязательные поля`);
@@ -222,12 +244,11 @@ router.post('/import', authenticateToken, isAdmin, upload.single('file'), async 
 
                 if (!material) {
                     // Создаем новый материал с базовыми параметрами
-                    const materialCode = row['Код материала']?.toString().trim() || 
-                                       materialName.replace(/\s+/g, '_').toUpperCase();
+                    const code = materialCode || materialName.replace(/\s+/g, '_').toUpperCase();
                     
                     material = await Material.create({
                         name: materialName,
-                        code: materialCode,
+                        code: code,
                         unit: 'м²',
                         category_id: category.id,
                         overall_width: 1.0,
@@ -291,23 +312,108 @@ router.post('/import', authenticateToken, isAdmin, upload.single('file'), async 
 });
 
 // Download template
-router.get('/template', authenticateToken, isAdmin, (req, res) => {
+router.get('/template', authenticateToken, isAdmin, async (req, res) => {
     try {
-        const templatePath = path.join(process.cwd(), 'server', 'templates', 'price_template.xlsx');
-        
-        if (!fs.existsSync(templatePath)) {
-            return res.status(404).json({ message: 'Шаблон не найден' });
-        }
+        // Создаем шаблон на лету
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Шаблон прайс-листа');
 
-        res.download(templatePath, 'price_template.xlsx', (err) => {
-            if (err) {
-                console.error('Error downloading template:', err);
-                res.status(500).json({ message: 'Ошибка при скачивании шаблона' });
+        // Определяем заголовки
+        const headers = [
+            { header: '№', key: 'number', width: 5 },
+            { header: 'Категория', key: 'category', width: 20 },
+            { header: 'Материал', key: 'material', width: 30 },
+            { header: 'Код материала', key: 'code', width: 15 },
+            { header: 'Покрытие', key: 'coating', width: 20 },
+            { header: 'Толщина (мм)', key: 'thickness', width: 12 },
+            { header: 'Цена за м² (₽)', key: 'price', width: 15 },
+            { header: 'Дата обновления', key: 'date', width: 15 }
+        ];
+
+        worksheet.columns = headers;
+
+        // Стилизуем заголовки
+        worksheet.getRow(1).font = { bold: true };
+        worksheet.getRow(1).fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFE6E6FA' }
+        };
+
+        // Добавляем примеры данных
+        const exampleData = [
+            {
+                number: 1,
+                category: 'Профлист',
+                material: 'Профлист С-8',
+                code: 'C8',
+                coating: 'Полиэстер',
+                thickness: 0.5,
+                price: 450.00,
+                date: new Date().toLocaleDateString('ru-RU')
+            },
+            {
+                number: 2,
+                category: 'Металлочерепица',
+                material: 'Металлочерепица Монтеррей',
+                code: 'MT_MONT',
+                coating: 'Матовый полиэстер',
+                thickness: 0.45,
+                price: 520.00,
+                date: new Date().toLocaleDateString('ru-RU')
             }
+        ];
+
+        exampleData.forEach(data => {
+            worksheet.addRow(data);
         });
+
+        // Применяем границы к таблице
+        const borderStyle = {
+            top: { style: 'thin' },
+            left: { style: 'thin' },
+            bottom: { style: 'thin' },
+            right: { style: 'thin' }
+        };
+
+        worksheet.eachRow((row, rowNumber) => {
+            row.eachCell((cell) => {
+                cell.border = borderStyle;
+            });
+        });
+
+        // Добавляем инструкции на второй лист
+        const instructionsSheet = workbook.addWorksheet('Инструкции');
+        instructionsSheet.addRow(['Инструкции по заполнению шаблона прайс-листа']);
+        instructionsSheet.addRow([]);
+        instructionsSheet.addRow(['1. № - порядковый номер (заполняется автоматически)']);
+        instructionsSheet.addRow(['2. Категория - название категории материала (обязательно)']);
+        instructionsSheet.addRow(['3. Материал - название материала (обязательно)']);
+        instructionsSheet.addRow(['4. Код материала - уникальный код (необязательно)']);
+        instructionsSheet.addRow(['5. Покрытие - тип покрытия материала (обязательно)']);
+        instructionsSheet.addRow(['6. Толщина (мм) - толщина в миллиметрах (обязательно)']);
+        instructionsSheet.addRow(['7. Цена за м² (₽) - цена за квадратный метр (обязательно)']);
+        instructionsSheet.addRow(['8. Дата обновления - дата последнего обновления']);
+        instructionsSheet.addRow([]);
+        instructionsSheet.addRow(['Примечания:']);
+        instructionsSheet.addRow(['- Если категория не существует, она будет создана автоматически']);
+        instructionsSheet.addRow(['- Если материал не существует, он будет создан с базовыми параметрами']);
+        instructionsSheet.addRow(['- При совпадении материала, покрытия и толщины цена будет обновлена']);
+
+        // Стилизуем инструкции
+        instructionsSheet.getRow(1).font = { bold: true, size: 14 };
+        instructionsSheet.getColumn(1).width = 80;
+
+        // Устанавливаем заголовки для скачивания файла
+        res.setHeader('Content-Disposition', 'attachment; filename="price_template.xlsx"');
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+
+        // Записываем в response
+        await workbook.xlsx.write(res);
+        res.end();
     } catch (error) {
-        console.error('Error serving template:', error);
-        res.status(500).json({ message: 'Ошибка при получении шаблона' });
+        console.error('Error creating template:', error);
+        res.status(500).json({ message: 'Ошибка при создании шаблона' });
     }
 });
 
