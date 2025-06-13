@@ -41,6 +41,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Инициализация фильтров прайс-листа
     setupPricelistFilters();
+
+    // Инициализация импорта/экспорта
+    setupImportExport();
 });
 
 /**
@@ -72,6 +75,152 @@ function setupAdminTabs() {
             }
         });
     });
+}
+
+/**
+ * Настройка импорта и экспорта
+ */
+function setupImportExport() {
+    const importBtn = document.getElementById('importPricelistBtn');
+    const exportBtn = document.getElementById('exportPricelistBtn');
+
+    if (importBtn) {
+        importBtn.addEventListener('click', () => {
+            // Создаем скрытый input для выбора файла
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = '.xlsx';
+            fileInput.style.display = 'none';
+            
+            fileInput.addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    await importPricelist(file);
+                }
+                document.body.removeChild(fileInput);
+            });
+            
+            document.body.appendChild(fileInput);
+            fileInput.click();
+        });
+    }
+
+    if (exportBtn) {
+        exportBtn.addEventListener('click', exportPricelist);
+    }
+}
+
+/**
+ * Импорт прайс-листа
+ */
+async function importPricelist(file) {
+    try {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        // Показываем индикатор загрузки
+        const importBtn = document.getElementById('importPricelistBtn');
+        const originalText = importBtn.innerHTML;
+        importBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Импорт...';
+        importBtn.disabled = true;
+
+        const response = await fetch('/api/prices/import', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: formData
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Ошибка при импорте');
+        }
+
+        const result = await response.json();
+
+        // Восстанавливаем кнопку
+        importBtn.innerHTML = originalText;
+        importBtn.disabled = false;
+
+        // Показываем результаты импорта
+        let message = `Импорт завершен!\n\nУспешно обработано: ${result.results.success} записей`;
+        
+        if (result.results.warnings.length > 0) {
+            message += `\n\nПредупреждения:\n${result.results.warnings.join('\n')}`;
+        }
+        
+        if (result.results.errors.length > 0) {
+            message += `\n\nОшибки:\n${result.results.errors.join('\n')}`;
+        }
+
+        alert(message);
+
+        // Перезагружаем данные
+        await Promise.all([
+            loadCategories(),
+            loadMaterials(),
+            loadPricelist()
+        ]);
+    } catch (error) {
+        console.error('Ошибка при импорте:', error);
+        
+        // Восстанавливаем кнопку
+        const importBtn = document.getElementById('importPricelistBtn');
+        importBtn.innerHTML = '<i class="fas fa-file-import"></i> Импорт';
+        importBtn.disabled = false;
+        
+        alert(error.message || 'Ошибка при импорте прайс-листа');
+    }
+}
+
+/**
+ * Экспорт прайс-листа
+ */
+async function exportPricelist() {
+    try {
+        const exportBtn = document.getElementById('exportPricelistBtn');
+        const originalText = exportBtn.innerHTML;
+        exportBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Экспорт...';
+        exportBtn.disabled = true;
+
+        const response = await fetch('/api/prices/export', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Ошибка при экспорте');
+        }
+
+        // Получаем blob и создаем ссылку для скачивания
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `pricelist_${new Date().toISOString().split('T')[0]}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+
+        // Восстанавливаем кнопку
+        exportBtn.innerHTML = originalText;
+        exportBtn.disabled = false;
+
+        alert('Прайс-лист успешно экспортирован');
+    } catch (error) {
+        console.error('Ошибка при экспорте:', error);
+        
+        // Восстанавливаем кнопку
+        const exportBtn = document.getElementById('exportPricelistBtn');
+        exportBtn.innerHTML = '<i class="fas fa-file-export"></i> Экспорт';
+        exportBtn.disabled = false;
+        
+        alert('Ошибка при экспорте прайс-листа');
+    }
 }
 
 /**
