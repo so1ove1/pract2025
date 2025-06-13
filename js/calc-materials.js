@@ -460,8 +460,8 @@ function calculateFenceMaterials() {
 
         if (!material || !priceOption) return [];
 
-        // x = ([длина забора / (ширина габаритная штакетины + расстояние между деталями)]-округлить + 1)
-        const stakesCount = customRound(length / ((material.overall_width + spacing) / 1000)) + 1;
+        const stakesCount = customRound(length / (parseFloat(material.overall_width) + (spacing / 1000))) + 1;
+
 
         results.push({
             materialId: parseInt(materialId),

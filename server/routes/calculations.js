@@ -41,7 +41,7 @@ router.post('/', authenticateToken, async (req, res) => {
     try {
         const calculation = await Calculation.create({
             ...req.body,
-            user_id: req.user.id // Changed from userId to user_id to match schema
+            user_id: req.user.id 
         });
 
         res.status(201).json(calculation);
